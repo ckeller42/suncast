@@ -1,0 +1,19 @@
+docs/superpowers/specs/2026-07-02-suncast-design.md
+  s_b8af11b0ef3dca::t_98476a5ad8fb61 1-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.8",
+  "base_commit_sha": "3aa558344ae1becbbe5e1df796394b827354583f",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
