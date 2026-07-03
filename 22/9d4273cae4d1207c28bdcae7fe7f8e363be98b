@@ -1,0 +1,49 @@
+tests/test_store.py
+  s_b8af11b0ef3dca::t_8ac39c150b86eb 58-64
+  s_b8af11b0ef3dca::t_e66a6dfe6475f5 14,18,33,39,45,52,65-66
+suncast/store.py
+  s_b8af11b0ef3dca::t_7b1666d7a22cfe 165-168,171-174
+  s_b8af11b0ef3dca::t_68b0644547eef6 177,179-181
+  s_b8af11b0ef3dca::t_c300e523f771fe 117-123
+  s_b8af11b0ef3dca::t_d485db2e985c61 1,4
+  s_b8af11b0ef3dca::t_0749b536996207 62-91
+  s_b8af11b0ef3dca::t_09c5da6b84925e 97-104,106
+  s_b8af11b0ef3dca::t_11a0cc0ac05712 112
+  s_b8af11b0ef3dca::t_c6029961fffa2c 115,129-138,148,175
+  s_b8af11b0ef3dca::t_04e18e8987c882 18
+  s_b8af11b0ef3dca::t_4e7a4a483fd04c 143,146-147
+  s_b8af11b0ef3dca::t_28d3f4c677bbbc 150-156,159-162
+  s_b8af11b0ef3dca::t_dc074ecfb9a550 59-61,95-96,107,110-111,116,127-128,141-142,149,163-164,176
+suncast.egg-info/PKG-INFO
+  s_b8af11b0ef3dca::t_d8ecc6f37df703 1-16
+suncast.egg-info/SOURCES.txt
+  s_b8af11b0ef3dca::t_9fe64f8506979a 1-17
+suncast.egg-info/dependency_links.txt
+  s_b8af11b0ef3dca::t_887b3a6670a9fe 1
+suncast.egg-info/entry_points.txt
+  s_b8af11b0ef3dca::t_3110f33dad03dd 1-2
+suncast.egg-info/requires.txt
+  s_b8af11b0ef3dca::t_7494be75bdfbd9 1-9
+suncast.egg-info/top_level.txt
+  s_b8af11b0ef3dca::t_04a4561c36f512 1
+suncast/providers/forecast_solar.py
+  s_b8af11b0ef3dca::t_6926311101e2d5 27,64,113,180-181
+uv.lock
+  s_b8af11b0ef3dca::t_79d2f81b352b89 1-540
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "229d4273cae4d1207c28bdcae7fe7f8e363be98b",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
