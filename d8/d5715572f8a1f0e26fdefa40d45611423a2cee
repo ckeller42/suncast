@@ -1,0 +1,31 @@
+tests/test_api.py
+  s_b8af11b0ef3dca::t_afd271590de113 73-76,83-86,94-114,116-118
+  s_b8af11b0ef3dca::t_57a0f08142ff31 77-82,87-93
+  s_b8af11b0ef3dca::t_12d026bda9b3ca 115
+  s_b8af11b0ef3dca::t_2a249255a016d5 1
+suncast/app.py
+  s_b8af11b0ef3dca::t_7ee480cb2d78b6 66-67
+  s_b8af11b0ef3dca::t_b51b1d292aaa24 44
+  s_b8af11b0ef3dca::t_fa50f111ea9537 150
+  s_b8af11b0ef3dca::t_02a7f2f4ae9f03 76
+  s_b8af11b0ef3dca::t_6fc566123602b4 84-85,87-93
+  s_b8af11b0ef3dca::t_feee4a63cf57c1 2,10,12,16
+  s_b8af11b0ef3dca::t_cff58cfbce575e 155-167
+  s_b8af11b0ef3dca::t_3c13fce5ac1db5 83
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d8d5715572f8a1f0e26fdefa40d45611423a2cee",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": null
+    }
+  }
+}
