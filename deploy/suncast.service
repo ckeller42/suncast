@@ -1,0 +1,15 @@
+[Unit]
+Description=suncast — camper solar forecast (map + calibrated Forecast.Solar)
+After=network-online.target influxdb.service
+Wants=network-online.target
+
+[Service]
+ExecStart=/home/pi/suncast-env/bin/suncast
+EnvironmentFile=/etc/buspi/secrets.env
+EnvironmentFile=/etc/buspi/suncast.env
+Restart=always
+RestartSec=15
+User=pi
+
+[Install]
+WantedBy=multi-user.target
