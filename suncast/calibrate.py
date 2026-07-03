@@ -40,30 +40,9 @@ def calibration(
 def apply_factor(series: ForecastSeries, cal: Calibration) -> dict:
     """Apply calibration factor to forecast series."""
     hourly = []
-    daily_corrected = defaultdict(
-        lambda: {
-            "raw_wh": 0.0,
-            "corrected_wh": 0.0,
-            "lower_wh": 0.0,
-            "upper_wh": 0.0,
-        }
-    )
-
-    # Process hourly points
     for point in series.points:
-        iso = point.ts.isoformat()
-        day = point.ts.strftime("%Y-%m-%d")
-        raw_w = point.watts
-        corrected_w = raw_w * cal.factor
-        hourly.append([iso, raw_w, corrected_w])
+        hourly.append([point.ts.isoformat(), point.watts, point.watts * cal.factor])
 
-        # Accumulate daily
-        daily_corrected[day]["raw_wh"] += raw_w
-        daily_corrected[day]["corrected_wh"] += corrected_w
-        daily_corrected[day]["lower_wh"] += raw_w * cal.p25
-        daily_corrected[day]["upper_wh"] += raw_w * cal.p75
-
-    # Use the aggregated daily_wh from series if available
     daily = {}
     for day, raw_wh in series.daily_wh.items():
         daily[day] = {
@@ -87,38 +66,21 @@ def best_window(points: list[ForecastPoint], hours: int = 4) -> dict[str, dict]:
     result = {}
     for day in sorted(by_day.keys()):
         day_points = sorted(by_day[day], key=lambda p: p.ts)
-        max_wh = 0.0
-        best_start_idx = 0
-
-        # Try all consecutive windows of `hours` length
-        for start_idx in range(len(day_points)):
-            # Find points within hours from start
-            start_ts = day_points[start_idx].ts
-            end_ts = start_ts + timedelta(hours=hours)
-
-            window_sum = 0.0
-            point_count = 0
-            for point in day_points[start_idx:]:
-                if point.ts < end_ts:
-                    window_sum += point.watts
-                    point_count += 1
-                else:
-                    break
-
-            # Only count if we have a full window
-            if point_count >= hours or (start_idx + hours <= len(day_points)):
-                if window_sum > max_wh:
-                    max_wh = window_sum
-                    best_start_idx = start_idx
-
-        if day_points:
-            start_point = day_points[best_start_idx]
-            end_ts = start_point.ts + timedelta(hours=hours)
-            result[day] = {
-                "start": start_point.ts.isoformat(),
-                "end": end_ts.isoformat(),
-                "wh": max_wh,
-            }
+        # Slice length shrinks to the available points on partial days so a
+        # short first/last forecast day still reports its real best block.
+        size = min(hours, len(day_points))
+        best = None
+        for start_idx in range(len(day_points) - size + 1):
+            chunk = day_points[start_idx : start_idx + size]
+            wh = sum(p.watts for p in chunk)
+            if best is None or wh > best[0]:
+                best = (wh, chunk)
+        wh, chunk = best
+        result[day] = {
+            "start": chunk[0].ts.isoformat(),
+            "end": (chunk[-1].ts + timedelta(hours=1)).isoformat(),
+            "wh": wh,
+        }
 
     return result
 
@@ -137,7 +99,7 @@ def metrics(pairs: list[tuple[float, float]]) -> dict:
     for forecast, actual in pairs:
         error = abs(forecast - actual)
         mae_sum += error
-        rmse_sum += error ** 2
+        rmse_sum += error**2
         bias_sum += forecast - actual
 
         if actual >= 50:
