@@ -107,6 +107,15 @@ class Store:
             daily_wh = json.loads(row[0])
             return daily_wh.get(day)
 
+    def snapshot_id_for_day(self, day: str) -> int | None:
+        """Id of the earliest snapshot created on `day` (UTC), or None."""
+        with self._lock:
+            cursor = self.conn.execute(
+                "SELECT id FROM snapshots WHERE day = ? ORDER BY created_at ASC LIMIT 1", (day,)
+            )
+            row = cursor.fetchone()
+            return row[0] if row else None
+
     def has_snapshot_today(self, day: str) -> bool:
         with self._lock:
             cursor = self.conn.execute("SELECT 1 FROM snapshots WHERE day = ? LIMIT 1", (day,))

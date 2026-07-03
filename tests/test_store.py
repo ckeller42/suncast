@@ -31,6 +31,13 @@ def test_snapshot_roundtrip_and_earliest_wins(tmp_path):
     assert st.has_snapshot_today("2026-07-03") is True
 
 
+def test_snapshot_id_for_day(tmp_path):
+    st = store(tmp_path)
+    assert st.snapshot_id_for_day("2026-07-03") is None
+    sid = st.save_snapshot(S, 48.77, 9.16, PanelConfig())
+    assert st.snapshot_id_for_day("2026-07-03") == sid
+
+
 def test_ratios_upsert_and_order(tmp_path):
     st = store(tmp_path)
     sid = st.save_snapshot(S, 48.77, 9.16, PanelConfig())
