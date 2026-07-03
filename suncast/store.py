@@ -15,7 +15,8 @@ class Store:
 
         self.conn = sqlite3.connect(str(db_path), check_same_thread=False)
         self.conn.execute("PRAGMA journal_mode=WAL")
-        self._lock = threading.Lock()
+        # Reentrant: public methods may call each other (get_panel -> set_panel).
+        self._lock = threading.RLock()
 
         self._init_schema()
 
