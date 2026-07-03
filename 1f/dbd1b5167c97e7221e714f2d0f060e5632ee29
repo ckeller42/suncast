@@ -1,0 +1,26 @@
+tests/test_jobs.py
+  s_b8af11b0ef3dca::t_3783d0d833e3f2 3-6,8-10,14,17-18,27-32,35-40,42-49
+  s_b8af11b0ef3dca::t_c4e75abc66b05a 11-13,15-16
+  s_b8af11b0ef3dca::t_c9a30568cb8f44 33-34
+  s_b8af11b0ef3dca::t_f8551e808f679c 19-26
+  s_b8af11b0ef3dca::t_d14437b4e8afc9 1-2,7,41,50-56
+suncast/jobs.py
+  s_b8af11b0ef3dca::t_02c221d64841be 1-96
+  s_b8af11b0ef3dca::t_b62ea1c42f5946 97-99
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "1fdbd1b5167c97e7221e714f2d0f060e5632ee29",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
