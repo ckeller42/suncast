@@ -1,0 +1,36 @@
+suncast/templates/index.html
+  s_b8af11b0ef3dca::t_48043ea0cd3b43 1-62
+tests/test_pages.py
+  s_b8af11b0ef3dca::t_0dc9cec6a0eeed 1-22
+suncast/static/style.css
+  s_b8af11b0ef3dca::t_299178605bd9fe 1-160
+suncast/static/app.js
+  s_b8af11b0ef3dca::t_c745f28877797a 1-243,245-248
+  s_b8af11b0ef3dca::t_5844aa084203da 244
+suncast/app.py
+  s_b8af11b0ef3dca::t_6e62c1f2ae0345 33-37
+  s_b8af11b0ef3dca::t_70e0c7bbe673c4 8,11-13
+  s_b8af11b0ef3dca::t_0adb526648df5f 83-92
+suncast/templates/history.html
+  s_b8af11b0ef3dca::t_22b0cec42ba958 1-33
+suncast/static/vendor/leaflet/leaflet.css
+  s_b8af11b0ef3dca::t_f6dd6382426212 1-661
+suncast/static/vendor/leaflet/leaflet.js
+  s_b8af11b0ef3dca::t_429b19e67d7a31 1-6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b445b2c10c84feb07b80cdacd1786a51aeedc58d",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
