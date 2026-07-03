@@ -1,0 +1,25 @@
+tests/test_store.py
+  s_b8af11b0ef3dca::t_1f35229f712ee1 34-40
+suncast/store.py
+  s_b8af11b0ef3dca::t_c697d8159ae04a 110-118
+suncast/jobs.py
+  s_b8af11b0ef3dca::t_33f7451e6ff6d1 41-43,63,81-83,85
+  s_b8af11b0ef3dca::t_7287a04e2e36b4 1,12
+  s_b8af11b0ef3dca::t_8c6cbf86f7ce5d 13
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f7d994fdd43d18169a74b3689826da0741a211af",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
