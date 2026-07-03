@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -6,12 +7,13 @@ from dataclasses import asdict
 from datetime import UTC, datetime
 
 import uvicorn
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Body, FastAPI, HTTPException
 
+from suncast import jobs
 from suncast.calibrate import apply_factor, best_window, calibration, metrics
 from suncast.config import Config, load
 from suncast.influx import InfluxReader, make_query_fn
-from suncast.jobs import Deps, daily_tick
+from suncast.jobs import Deps
 from suncast.models import PanelConfig
 from suncast.providers.forecast_solar import (
     ForecastSolar,
@@ -39,7 +41,7 @@ def _cal_dict(cal) -> dict:
 async def _job_loop(app: FastAPI) -> None:
     while True:
         try:
-            daily_tick(
+            jobs.daily_tick(
                 Deps(
                     provider=app.state.provider,
                     store=app.state.store,
@@ -61,6 +63,8 @@ def create_app(cfg: Config, provider, store: Store, influx) -> FastAPI:
         yield
         if task is not None:
             task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await task
 
     app = FastAPI(lifespan=lifespan)
     app.state.cfg = cfg
@@ -69,16 +73,24 @@ def create_app(cfg: Config, provider, store: Store, influx) -> FastAPI:
     app.state.influx = influx
 
     @app.post("/api/forecast")
-    async def forecast(request: Request):
-        body = await request.json()
+    def forecast(body: dict = Body(...)):  # noqa: B008
         lat = body.get("lat")
         lon = body.get("lon")
         if lat is None or lon is None:
             raise HTTPException(status_code=422, detail="lat and lon are required")
 
         days = body.get("days", 3)
+        if not isinstance(days, int) or not (1 <= days <= 6):
+            raise HTTPException(status_code=422, detail="days must be int 1..6")
+
         panel_body = body.get("panel")
-        panel = PanelConfig(**panel_body) if panel_body else store.get_panel()
+        if panel_body:
+            try:
+                panel = PanelConfig(**panel_body)
+            except TypeError as e:
+                raise HTTPException(status_code=422, detail="invalid panel") from e
+        else:
+            panel = store.get_panel()
 
         try:
             series = provider.forecast(lat, lon, panel, days)
@@ -135,12 +147,24 @@ def create_app(cfg: Config, provider, store: Store, influx) -> FastAPI:
         return asdict(store.get_panel())
 
     @app.post("/api/config")
-    async def post_config(request: Request):
-        body = await request.json()
+    def post_config(body: dict = Body(...)):  # noqa: B008
         try:
             panel = PanelConfig(**body)
         except TypeError as e:
             raise HTTPException(status_code=422, detail=str(e)) from e
+
+        int_fields = ("panel_wp", "charger_limit_w")
+        numeric_fields = ("tilt_deg", "azimuth_deg", "damping")
+        valid = all(
+            isinstance(getattr(panel, f), int) and not isinstance(getattr(panel, f), bool)
+            for f in int_fields
+        ) and all(
+            isinstance(getattr(panel, f), int | float) and not isinstance(getattr(panel, f), bool)
+            for f in numeric_fields
+        )
+        if not valid:
+            raise HTTPException(status_code=422, detail="invalid panel value types")
+
         store.set_panel(panel)
         return asdict(panel)
 

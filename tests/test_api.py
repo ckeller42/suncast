@@ -1,3 +1,4 @@
+import time
 from datetime import UTC, datetime
 
 from fastapi.testclient import TestClient
@@ -69,3 +70,49 @@ def test_history_and_health_and_location(tmp_path):
     assert len(h["days"]) == 6 and h["days"][0]["day"] == "2026-06-20"
     assert c.get("/api/current-location").json()["lat"] == 48.77
     assert c.get("/api/health").status_code == 200
+
+
+def test_forecast_bad_panel_is_422(tmp_path):
+    c = client(tmp_path)
+    r1 = c.post("/api/forecast", json={"lat": 1, "lon": 2, "panel": {"nope": 5}})
+    assert r1.status_code == 422
+    r2 = c.post("/api/forecast", json={"lat": 1, "lon": 2, "panel": "x"})
+    assert r2.status_code == 422
+    r3 = c.post("/api/forecast", json={"lat": 1, "lon": 2, "days": "many"})
+    assert r3.status_code == 422
+
+
+def test_config_bad_types_is_422(tmp_path):
+    c = client(tmp_path)
+    body = {
+        "panel_wp": "big",
+        "tilt_deg": 0.0,
+        "azimuth_deg": 0.0,
+        "charger_limit_w": 200,
+        "damping": 0.0,
+    }
+    assert c.post("/api/config", json=body).status_code == 422
+
+
+def test_lifespan_no_jobs_clean_startup_shutdown(tmp_path):
+    c = client(tmp_path)  # helper sets app.state.no_jobs = True
+    with c as ctx:
+        assert ctx.get("/api/health").status_code == 200
+
+
+def test_lifespan_runs_daily_tick(tmp_path, monkeypatch):
+    calls = []
+    from suncast import jobs as jobs_mod
+
+    monkeypatch.setattr(
+        jobs_mod,
+        "daily_tick",
+        lambda deps: calls.append(1) or {"snapshotted": False, "ratio_day": None, "skipped": None},
+    )
+    store = Store(str(tmp_path / "s.db"))
+    app = create_app(CFG, P(), store, FakeInflux())  # no_jobs NOT set
+    with TestClient(app):
+        deadline = time.time() + 2
+        while not calls and time.time() < deadline:
+            time.sleep(0.05)
+    assert calls, "daily_tick was never invoked by the lifespan loop"
