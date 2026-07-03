@@ -1,0 +1,28 @@
+tests/test_forecast_solar_parse.py
+  s_b8af11b0ef3dca::t_80624e4fd5e54a 1-34
+suncast/providers/forecast_solar.py
+  s_b8af11b0ef3dca::t_e0721546de9d6d 1-2,4-46,48-51,53-59,61-62,64-80
+  s_b8af11b0ef3dca::t_f9871bcf5d1b44 47
+  s_b8af11b0ef3dca::t_aac7f0887d848e 52
+  s_b8af11b0ef3dca::t_cc94dcfd9f03e6 63
+  s_b8af11b0ef3dca::t_87e288108db79a 3
+  s_b8af11b0ef3dca::t_999e5d05c3f7df 60
+tests/fixtures/forecast_solar_ok.json
+  s_b8af11b0ef3dca::t_6b4438f5d4affb 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "442fb2f5af2c5fccfa3804891121e187558a9db7",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
