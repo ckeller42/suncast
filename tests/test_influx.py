@@ -49,3 +49,16 @@ def test_latest_location_combines_fields():
 
 def test_latest_location_none_when_empty():
     assert InfluxReader(CFG, lambda q: []).latest_location() is None
+
+
+def test_latest_location_survives_missing_range():
+    def q(flux):
+        now = datetime.now(UTC)
+        if '"lat"' in flux:
+            return [(now, 48.77)]
+        if '"lon"' in flux:
+            return [(now, 9.16)]
+        return []  # no range_m samples
+
+    lat, lon, rng, age = InfluxReader(CFG, q).latest_location()
+    assert (lat, lon, rng) == (48.77, 9.16, 0.0)
