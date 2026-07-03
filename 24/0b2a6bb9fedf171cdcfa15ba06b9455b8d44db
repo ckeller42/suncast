@@ -1,0 +1,23 @@
+suncast/calibrate.py
+  s_b8af11b0ef3dca::t_df27c65a83cf17 1,5-42,51-153
+  s_b8af11b0ef3dca::t_c2b841da64ff19 2-4
+  s_b8af11b0ef3dca::t_f37e8031a53626 43-50
+tests/test_calibrate.py
+  s_b8af11b0ef3dca::t_c1eb0ac30ccca3 1-48
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "240b2a6bb9fedf171cdcfa15ba06b9455b8d44db",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
