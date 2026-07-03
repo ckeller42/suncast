@@ -1,0 +1,25 @@
+tests/test_influx.py
+  s_b8af11b0ef3dca::t_b5aa6f171c1a7d 1,10
+  s_b8af11b0ef3dca::t_46157cb47760f6 2-9,11-38,40-51
+  s_b8af11b0ef3dca::t_ca8dc8c8f402b7 39
+suncast/influx.py
+  s_b8af11b0ef3dca::t_15222a45dc0c0d 99
+  s_b8af11b0ef3dca::t_d9b30b52aad3ba 1,3-98,100-149
+  s_b8af11b0ef3dca::t_defe84db9abfbf 2
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "058f4e7ec882b7bd40c625ebc1da2b27a15b1190",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
