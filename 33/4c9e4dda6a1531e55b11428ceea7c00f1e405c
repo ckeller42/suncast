@@ -1,0 +1,23 @@
+.markdownlint.json
+  s_b8af11b0ef3dca::t_bf975a95429f60 2-3
+  s_b8af11b0ef3dca::t_8841c18ddfa118 1,4-6
+  s_b8af11b0ef3dca::t_67347e2d875b72 7
+.github/workflows/ci.yml
+  s_b8af11b0ef3dca::t_268ff33db886ef 1-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "334c9e4dda6a1531e55b11428ceea7c00f1e405c",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
