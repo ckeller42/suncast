@@ -1,0 +1,22 @@
+tests/test_influx.py
+  s_b8af11b0ef3dca::t_dd8741892bee65 52-64
+suncast/influx.py
+  s_b8af11b0ef3dca::t_916bd876f3cc0b 69-70,88-89
+  s_b8af11b0ef3dca::t_bb5f143a0c0935 26,29,90,104,107,126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a64bbd41e6602889669918efeefab7f93f46257e",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
