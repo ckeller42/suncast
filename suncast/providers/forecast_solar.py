@@ -24,9 +24,7 @@ class RateLimited(ProviderError):
 FetchFn = Callable[[str], tuple[int, bytes]]
 
 
-def parse_estimate(
-    status: int, body: bytes, cap_w: float, now: datetime
-) -> ForecastSeries:
+def parse_estimate(status: int, body: bytes, cap_w: float, now: datetime) -> ForecastSeries:
     """Parse Forecast.Solar response.
 
     Args:
@@ -63,9 +61,7 @@ def parse_estimate(
 
     for ts_str, watts in watts_data.items():
         try:
-            dt = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").replace(
-                tzinfo=UTC
-            )
+            dt = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC)
         except (ValueError, TypeError) as e:
             raise ProviderError(f"Invalid timestamp: {e}") from e
 
@@ -114,9 +110,7 @@ class ForecastSolar:
         self.now = now
         self._cache: dict[tuple, tuple[datetime, ForecastSeries]] = {}
 
-    def forecast(
-        self, lat: float, lon: float, panel: PanelConfig, days: int = 3
-    ) -> ForecastSeries:
+    def forecast(self, lat: float, lon: float, panel: PanelConfig, days: int = 3) -> ForecastSeries:
         """Forecast solar generation.
 
         Args:
@@ -183,12 +177,8 @@ class ForecastSolar:
 
         # Filter points and daily_wh
         dates_to_keep = set(unique_dates)
-        filtered_points = [
-            p for p in series.points if p.ts.strftime("%Y-%m-%d") in dates_to_keep
-        ]
-        filtered_daily = {
-            k: v for k, v in series.daily_wh.items() if k in dates_to_keep
-        }
+        filtered_points = [p for p in series.points if p.ts.strftime("%Y-%m-%d") in dates_to_keep]
+        filtered_daily = {k: v for k, v in series.daily_wh.items() if k in dates_to_keep}
 
         return ForecastSeries(
             points=filtered_points,
