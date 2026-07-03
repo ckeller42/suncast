@@ -1,0 +1,23 @@
+tests/test_config.py
+  s_b8af11b0ef3dca::t_d930087aceca71 2,15-26
+  s_b8af11b0ef3dca::t_79869170fa34fc 1,3-14,27-28
+suncast/config.py
+  s_b8af11b0ef3dca::t_8dd6ee6dcc23c2 2-54
+  s_b8af11b0ef3dca::t_043ecfcff597c0 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "534631e1531236810ed3c8310e6d4cfe906a018d",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
