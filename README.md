@@ -6,7 +6,9 @@
 
 **suncast** is a camper solar forecast service that displays hourly and daily power output from a rooftop PV array, combined with a web map showing current location. The forecast uses [Forecast.Solar](https://forecast.solar/) (public tier) and self-calibrates against your actual PV history.
 
-Why self-calibration? Weather forecasts contain systematic error. Forecast.Solar's irradiance models are good, but they don't know your panel tilt, soiling, or temperature coefficient. Over time—especially over 30 days—your system's generation pattern reveals the local bias. suncast computes a rolling 30-day median ratio of forecast to actual, clamped 0.3–1.3 to ignore outlier days, then applies it to all future forecasts. You see both raw (red) and corrected (green) curves, so you know what the system thinks is happening.
+Why self-calibration? Weather forecasts contain systematic error. Forecast.Solar's irradiance models are good, but they don't know your panel tilt, soiling, or temperature coefficient. Over time—especially over 30 days—your system's generation pattern reveals the local bias. suncast computes a rolling 30-day median ratio of forecast to actual, clamped 0.3–1.3 to ignore outlier days, then applies it to all future forecasts. You always see both the raw (gray) and corrected (blue) curves, so you know what the provider said and what your history says.
+
+<!-- screenshot: map + forecast page (add docs/screenshot.png when captured) -->
 
 ## Install on Raspberry Pi
 
@@ -14,7 +16,7 @@ Create a venv and install:
 
 ```bash
 python3 -m venv /home/pi/suncast-env
-/home/pi/suncast-env/bin/pip install /path/to/suncast
+/home/pi/suncast-env/bin/pip install .   # run from the suncast repo root
 ```
 
 Prepare the database directory:
