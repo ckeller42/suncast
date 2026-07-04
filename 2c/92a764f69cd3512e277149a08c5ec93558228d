@@ -1,0 +1,33 @@
+suncast/app.py
+  s_023d4245a6eaac::t_4a5592aaa824bb 15,202-212
+suncast/geocode.py
+  s_023d4245a6eaac::t_af9393938efd5b 1-54
+suncast/static/app.js
+  s_023d4245a6eaac::t_7f67684d2d65b0 277-318
+suncast/static/style.css
+  s_023d4245a6eaac::t_b7c5e1dcadd042 161-168
+suncast/templates/index.html
+  s_023d4245a6eaac::t_1bec0028ffc229 16-20
+tests/test_api.py
+  s_023d4245a6eaac::t_ce73b86054be6d 137-154
+tests/test_geocode.py
+  s_023d4245a6eaac::t_dbb2d427d6c701 1-35
+tests/test_pages.py
+  s_023d4245a6eaac::t_e6e9602546c52c 23-29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "2c92a764f69cd3512e277149a08c5ec93558228d",
+  "prompts": {},
+  "sessions": {
+    "s_023d4245a6eaac": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_023d4245a6eaac",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
