@@ -32,3 +32,18 @@ def test_bad_json_raises_provider_error():
 def test_500_raises_provider_error_with_status():
     with pytest.raises(ProviderError, match="500"):
         parse_estimate(500, b"", 200, NOW)
+
+
+def test_parse_live_iso_timestamps():
+    # Live API (?time=utc) returns ISO-8601 keys, incl. sunrise/sunset partials.
+    body = (
+        b'{"result": {"watts": {'
+        b'"2026-07-04T03:26:28+00:00": 0,'
+        b'"2026-07-04T12:00:00+00:00": 240,'
+        b'"2026-07-04 13:00:00": 100}}}'
+    )
+    s = parse_estimate(200, body, cap_w=200, now=NOW)
+    watts = {p.ts.isoformat(): p.watts for p in s.points}
+    assert watts["2026-07-04T12:00:00+00:00"] == 200
+    assert watts["2026-07-04T13:00:00+00:00"] == 100  # legacy format still accepted
+    assert s.daily_wh["2026-07-04"] == 0 + 200 + 100

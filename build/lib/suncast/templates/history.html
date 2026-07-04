@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>suncast · history</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>suncast</h1>
+    <nav><a href="/">Forecast</a><a href="/history">History</a></nav>
+  </header>
+  <main>
+    <div id="status"></div>
+    <p id="summary" class="summary-line"></p>
+    <div id="bars" class="card"></div>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>day</th><th>forecast</th><th>actual</th><th>ratio</th></tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>
+    loadHistory();
+  </script>
+</body>
+</html>

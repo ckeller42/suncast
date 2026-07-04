@@ -24,24 +24,6 @@ class RateLimited(ProviderError):
 FetchFn = Callable[[str], tuple[int, bytes]]
 
 
-def _parse_ts(ts_str: str) -> datetime:
-    """Parse a Forecast.Solar timestamp key as tz-aware UTC.
-
-    The live API (with ?time=utc) returns ISO-8601 ("2026-07-04T03:26:28+00:00");
-    older responses used "YYYY-MM-DD HH:MM:SS". Accept both.
-    """
-    try:
-        dt = datetime.fromisoformat(ts_str)
-    except (ValueError, TypeError):
-        try:
-            dt = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
-        except (ValueError, TypeError) as e:
-            raise ProviderError(f"Invalid timestamp: {e}") from e
-    if dt.tzinfo is None:
-        return dt.replace(tzinfo=UTC)
-    return dt.astimezone(UTC)
-
-
 def parse_estimate(status: int, body: bytes, cap_w: float, now: datetime) -> ForecastSeries:
     """Parse Forecast.Solar response.
 
@@ -78,7 +60,10 @@ def parse_estimate(status: int, body: bytes, cap_w: float, now: datetime) -> For
     daily_wh: dict[str, float] = defaultdict(float)
 
     for ts_str, watts in watts_data.items():
-        dt = _parse_ts(ts_str)
+        try:
+            dt = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=UTC)
+        except (ValueError, TypeError) as e:
+            raise ProviderError(f"Invalid timestamp: {e}") from e
 
         capped_watts = min(watts, cap_w)
         points.append(ForecastPoint(ts=dt, watts=capped_watts))
