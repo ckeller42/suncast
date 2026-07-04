@@ -1,0 +1,50 @@
+suncast/providers/forecast_solar.py
+  s_b8af11b0ef3dca::t_b58ffb0620fd8e 27-44
+  s_b8af11b0ef3dca::t_d48ae753714a93 81
+build/lib/suncast/app.py
+  s_b8af11b0ef3dca::t_5e83354fbfd88e 1-242
+build/lib/suncast/calibrate.py
+  s_b8af11b0ef3dca::t_3d200559625566 1-115
+build/lib/suncast/config.py
+  s_b8af11b0ef3dca::t_b81e5c74a69d14 1-54
+build/lib/suncast/influx.py
+  s_b8af11b0ef3dca::t_97b5eb00e541ff 1-137
+build/lib/suncast/jobs.py
+  s_b8af11b0ef3dca::t_e457274dacf314 1-89
+build/lib/suncast/models.py
+  s_b8af11b0ef3dca::t_b76f0e1b0f275a 1-42
+build/lib/suncast/providers/forecast_solar.py
+  s_b8af11b0ef3dca::t_49d08a6d7c8a37 1-188
+build/lib/suncast/static/app.js
+  s_b8af11b0ef3dca::t_2d345f0eb10b92 1-248
+build/lib/suncast/static/style.css
+  s_b8af11b0ef3dca::t_e8b57aa504a3f7 1-160
+build/lib/suncast/static/vendor/leaflet/leaflet.css
+  s_b8af11b0ef3dca::t_60fa3491924a02 1-661
+build/lib/suncast/static/vendor/leaflet/leaflet.js
+  s_b8af11b0ef3dca::t_0ef5b528324b0e 1-6
+build/lib/suncast/store.py
+  s_b8af11b0ef3dca::t_ff58480daab4ef 1-191
+build/lib/suncast/templates/history.html
+  s_b8af11b0ef3dca::t_4bcdd64db75b5f 1-33
+build/lib/suncast/templates/index.html
+  s_b8af11b0ef3dca::t_73f32be2ceecb8 1-62
+tests/test_forecast_solar_parse.py
+  s_b8af11b0ef3dca::t_ebe7e3087a36eb 35-49
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "dc67e421a814a2e5b7ad6f14e265493377d04bac",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
