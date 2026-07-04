@@ -1,0 +1,19 @@
+deploy/suncast.env.example
+  s_60744c83e31e54::t_83d46ca3569335 5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "62579740b537cd059a78fa5ab08234079acfaf76",
+  "prompts": {},
+  "sessions": {
+    "s_60744c83e31e54": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_60744c83e31e54",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
