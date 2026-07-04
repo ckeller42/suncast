@@ -1,0 +1,29 @@
+suncast/app.py
+  s_048d0390d378e8::t_22b10b78a76ffa 18,58-59,67,82,240
+suncast/config.py
+  s_048d0390d378e8::t_673db15abf969e 16,49
+suncast/influx.py
+  s_048d0390d378e8::t_2e764210214a74 7-23,131-145
+suncast/jobs.py
+  s_048d0390d378e8::t_54ab1587d76fb5 7-8,29-30,70-83
+tests/test_influx.py
+  s_048d0390d378e8::t_3e200da8d05fbb 80-91
+tests/test_jobs.py
+  s_048d0390d378e8::t_0e0b42519d8cb2 109-128
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d7b95a9875d8760a8621d09bc65fc075d23c6151",
+  "prompts": {},
+  "sessions": {
+    "s_048d0390d378e8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_048d0390d378e8",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
