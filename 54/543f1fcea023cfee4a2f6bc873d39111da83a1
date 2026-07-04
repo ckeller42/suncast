@@ -1,0 +1,37 @@
+README.md
+  s_42e47ee0450265::t_f1f95517d7da0e 9,63
+deploy/suncast.env.example
+  s_42e47ee0450265::t_7c1a37da5a491a 3-4,8
+suncast/config.py
+  s_42e47ee0450265::t_e01b3f60941967 13,45
+suncast/influx.py
+  s_42e47ee0450265::t_5fd044b8d97e32 9-10,12-13,23-24,41-42,44-47,50-51,53-62
+suncast/jobs.py
+  s_42e47ee0450265::t_70e05b85425961 14-18,71-75,78-100
+suncast/store.py
+  s_42e47ee0450265::t_c7453b299179f8 110-121
+suncast/templates/history.html
+  s_42e47ee0450265::t_5bc14b9ffbbf87 16
+tests/test_influx.py
+  s_42e47ee0450265::t_c643fd80e2cc44 4,6-7,15,22,28-44,47-49,76
+tests/test_jobs.py
+  s_42e47ee0450265::t_814cff1e672ec2 8-25,34,38-39,44-45,48-54,65-72,76-103
+tests/test_store.py
+  s_42e47ee0450265::t_ef90ce3605dbbf 74-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "54543f1fcea023cfee4a2f6bc873d39111da83a1",
+  "prompts": {},
+  "sessions": {
+    "s_42e47ee0450265": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_42e47ee0450265",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
