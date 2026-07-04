@@ -22,3 +22,13 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["suncast*"]
+
+[tool.setuptools.package-data]
+suncast = [
+  "templates/*.html",
+  "static/*.js",
+  "static/*.css",
+  "static/vendor/leaflet/*.js",
+  "static/vendor/leaflet/*.css",
+  "static/vendor/leaflet/images/*",
+]
