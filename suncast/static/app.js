@@ -274,3 +274,45 @@ function renderHistory(json) {
 
   document.getElementById("bars").innerHTML = svgBars(json.days);
 }
+
+// ---- address search (Nominatim via /api/geocode) ----
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("addr");
+  const btn = document.getElementById("addr-go");
+  const list = document.getElementById("addr-results");
+  if (!input || !btn || !list) return;
+
+  async function doSearch() {
+    const q = input.value.trim();
+    if (!q) return;
+    list.innerHTML = "";
+    setStatus("searching…");
+    try {
+      const json = await apiFetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+      setStatus("");
+      if (!json.results.length) {
+        setStatus("no results", true);
+        return;
+      }
+      for (const r of json.results) {
+        const li = document.createElement("li");
+        li.textContent = r.label;
+        li.addEventListener("click", () => {
+          list.innerHTML = "";
+          input.value = r.label;
+          setTarget(r.lat, r.lon);
+          map.setView([r.lat, r.lon], 12);
+          runForecast();
+        });
+        list.appendChild(li);
+      }
+    } catch (e) {
+      setStatus(`search failed: ${e.message}`, true);
+    }
+  }
+
+  btn.addEventListener("click", doSearch);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") doSearch();
+  });
+});

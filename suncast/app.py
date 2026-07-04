@@ -12,6 +12,7 @@ from fastapi import Body, FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from suncast import geocode as geocode_mod
 from suncast import jobs
 from suncast.calibrate import apply_factor, best_window, calibration, metrics
 from suncast.config import Config, load
@@ -197,6 +198,17 @@ def create_app(cfg: Config, provider, store: Store, influx, write=None) -> FastA
 
         store.set_panel(panel)
         return asdict(panel)
+
+    @app.get("/api/geocode")
+    def geocode(q: str = ""):
+        q = q.strip()
+        if not q:
+            raise HTTPException(status_code=422, detail="q is required")
+        try:
+            fetch = getattr(app.state, "geocode_fetch", None) or geocode_mod.default_fetch
+            return {"results": geocode_mod.search(q, fetch)}
+        except geocode_mod.GeocodeError as e:
+            raise HTTPException(status_code=502, detail=str(e)) from e
 
     @app.get("/api/current-location")
     def current_location():

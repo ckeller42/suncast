@@ -20,3 +20,10 @@ def test_leaflet_vendored():
     v = Path("suncast/static/vendor/leaflet")
     assert (v / "leaflet.js").stat().st_size > 100_000
     assert (v / "leaflet.css").exists()
+
+
+def test_index_has_address_search(tmp_path):
+    from tests.test_api import client
+
+    r = client(tmp_path).get("/")
+    assert 'id="addr"' in r.text and 'id="addr-results"' in r.text

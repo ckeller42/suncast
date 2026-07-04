@@ -134,3 +134,21 @@ def test_history_keeps_newest_days(tmp_path):
 def test_forecast_non_numeric_latlon_is_422(tmp_path):
     c = client(tmp_path)
     assert c.post("/api/forecast", json={"lat": "nope", "lon": 9.16}).status_code == 422
+
+
+def test_geocode_endpoint(tmp_path):
+    c = client(tmp_path)
+    c.app.state.geocode_fetch = lambda url, headers: (
+        200,
+        b'[{"display_name": "Stuttgart", "lat": "48.77", "lon": "9.18"}]',
+    )
+    r = c.get("/api/geocode?q=Stuttgart")
+    assert r.status_code == 200
+    assert r.json()["results"][0] == {"label": "Stuttgart", "lat": 48.77, "lon": 9.18}
+    assert c.get("/api/geocode?q=").status_code == 422
+
+
+def test_geocode_upstream_error_is_502(tmp_path):
+    c = client(tmp_path)
+    c.app.state.geocode_fetch = lambda url, headers: (503, b"")
+    assert c.get("/api/geocode?q=x").status_code == 502

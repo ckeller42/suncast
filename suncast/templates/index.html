@@ -13,6 +13,11 @@
     <nav><a href="/">Forecast</a><a href="/history">History</a></nav>
   </header>
   <main>
+    <div class="search-row">
+      <input id="addr" type="search" placeholder="search address or place…" />
+      <button id="addr-go" type="button">Search</button>
+      <ul id="addr-results" class="addr-results"></ul>
+    </div>
     <div id="map"></div>
     <p class="summary-line">
       target: <span id="target-lat">–</span>, <span id="target-lon">–</span>
