@@ -194,6 +194,11 @@ async function saveConfig(evt) {
   }
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  const sel = document.getElementById("days");
+  if (sel) sel.addEventListener("change", () => { if (targetLatLng) runForecast(); });
+});
+
 async function runForecast() {
   if (!targetLatLng) {
     setStatus("click the map to pick a location first", true);
@@ -208,7 +213,8 @@ async function runForecast() {
       body: JSON.stringify({ lat: targetLatLng.lat, lon: targetLatLng.lon, days }),
     });
     renderResults(json);
-    setStatus("");
+    const got = Object.keys(json.daily).length;
+    setStatus(got < days ? `provider returned ${got} day(s) — the free Forecast.Solar tier only covers today + tomorrow` : "");
   } catch (e) {
     setStatus(`forecast failed: ${e.message}`, true);
   }
