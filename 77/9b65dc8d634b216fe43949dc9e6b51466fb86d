@@ -1,0 +1,25 @@
+.gitignore
+  s_b8af11b0ef3dca::t_7fe6113a71d1a2 9-10
+README.md
+  s_b8af11b0ef3dca::t_46be6a14f938a6 103
+tests/test_api.py
+  s_b8af11b0ef3dca::t_7ed3c81f32b217 119-136
+suncast/app.py
+  s_b8af11b0ef3dca::t_7f31791bf85995 99-105,143-145
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "779b65dc8d634b216fe43949dc9e6b51466fb86d",
+  "prompts": {},
+  "sessions": {
+    "s_b8af11b0ef3dca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ee094925-3066-415a-b76b-76f7dd5013c5",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
