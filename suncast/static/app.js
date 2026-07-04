@@ -51,7 +51,19 @@ function svgChart(hourly) {
 
   const toPoints = (idx) => hourly.map((p, i) => `${x(i)},${y(p[idx])}`).join(" ");
 
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">
+  // Axis labels: y in W (0..max), x in local time. xkcd 833 compliance.
+  const padL = 40;
+  const padB = 16;
+  const t0 = new Date(hourly[0][0]);
+  const t1 = new Date(hourly[n - 1][0]);
+  const fmt = (t) => t.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  return `<svg viewBox="${-padL} 0 ${w + padL + 8} ${h + padB}">
+    <line x1="0" y1="0" x2="0" y2="${h}" stroke="#cbd5e1" stroke-width="1" />
+    <line x1="0" y1="${h}" x2="${w}" y2="${h}" stroke="#cbd5e1" stroke-width="1" />
+    <text x="-6" y="10" text-anchor="end" font-size="11" fill="#64748b">${Math.round(maxV)} W</text>
+    <text x="-6" y="${h}" text-anchor="end" font-size="11" fill="#64748b">0</text>
+    <text x="0" y="${h + 13}" font-size="11" fill="#64748b">${fmt(t0)}</text>
+    <text x="${w}" y="${h + 13}" text-anchor="end" font-size="11" fill="#64748b">${fmt(t1)}</text>
     <polyline points="${toPoints(1)}" fill="none" stroke="#94a3b8" stroke-width="2" />
     <polyline points="${toPoints(2)}" fill="none" stroke="#2563eb" stroke-width="2" />
   </svg>`;
@@ -82,7 +94,17 @@ function svgBars(days) {
     })
     .join("");
 
-  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">${bars}</svg>`;
+  // Axis labels: y in Wh, x = first/last day. xkcd 833 compliance.
+  const padL = 46;
+  const padB = 16;
+  return `<svg viewBox="${-padL} 0 ${w + padL + 8} ${h + padB}">
+    <line x1="0" y1="0" x2="0" y2="${h}" stroke="#cbd5e1" stroke-width="1" />
+    <line x1="0" y1="${h}" x2="${w}" y2="${h}" stroke="#cbd5e1" stroke-width="1" />
+    <text x="-6" y="10" text-anchor="end" font-size="11" fill="#64748b">${Math.round(maxV)} Wh</text>
+    <text x="-6" y="${h}" text-anchor="end" font-size="11" fill="#64748b">0</text>
+    <text x="0" y="${h + 13}" font-size="11" fill="#64748b">${days[0].day.slice(5)}</text>
+    <text x="${w}" y="${h + 13}" text-anchor="end" font-size="11" fill="#64748b">${days[n - 1].day.slice(5)}</text>
+    ${bars}</svg>`;
 }
 
 // ---- index page: map + forecast --------------------------------------
