@@ -6,7 +6,7 @@
 
 **suncast** is a camper solar forecast service that displays hourly and daily power output from a rooftop PV array, combined with a web map showing current location. The forecast uses [Forecast.Solar](https://forecast.solar/) (public tier) and self-calibrates against your actual PV history.
 
-Why self-calibration? Weather forecasts contain systematic error. Forecast.Solar's irradiance models are good, but they don't know your panel tilt, soiling, or temperature coefficient. Over time—especially over 30 days—your system's generation pattern reveals the local bias. suncast computes a rolling 30-day median ratio of forecast to actual, clamped 0.3–1.3 to ignore outlier days, then applies it to all future forecasts. You always see both the raw (gray) and corrected (blue) curves, so you know what the provider said and what your history says.
+Why self-calibration? Weather forecasts contain systematic error. Forecast.Solar's irradiance models are good, but they don't know your panel tilt, soiling, or temperature coefficient. Over time—especially over 30 days—your system's generation pattern reveals the local bias. suncast computes a rolling 30-day median ratio of forecast to actual — using only **unthrottled (bulk) charge hours**, because once the battery is full the MPPT throttles and absorbed power no longer reflects panel potential — clamped 0.3–1.3 to ignore outlier days, then applies it to all future forecasts. You always see both the raw (gray) and corrected (blue) curves, so you know what the provider said and what your history says.
 
 <!-- screenshot: map + forecast page (add docs/screenshot.png when captured) -->
 
@@ -60,6 +60,7 @@ All configuration is via environment variables. Required variables are marked wi
 | `INFLUXDB_TOKEN` * | — | InfluxDB API token (from `secrets.env`) |
 | `VICTRON_BUCKET` | `victron` | InfluxDB bucket containing Victron MPPT data |
 | `VICTRON_MEASUREMENT` | `victron` | Measurement name for Victron data |
+| `CHARGE_STATE_FIELD` | `charge_state` | Victron charge-state field (bulk detection for calibration) |
 | `PV_POWER_FIELD` | `pv_power` | Field name for PV power (watts) |
 | `GEO_BUCKET` | `buspi` | InfluxDB bucket containing GPS location data |
 | `GEO_MEASUREMENT` | `geo` | Measurement name for location data |

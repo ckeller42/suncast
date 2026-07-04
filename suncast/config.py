@@ -10,6 +10,7 @@ class Config:
     victron_bucket: str = "victron"
     victron_measurement: str = "victron"
     pv_power_field: str = "pv_power"
+    charge_state_field: str = "charge_state"
     geo_bucket: str = "buspi"
     geo_measurement: str = "geo"
     port: int = 8090
@@ -41,6 +42,7 @@ def load(env: Mapping[str, str]) -> Config:
         victron_bucket=env.get("VICTRON_BUCKET", "victron"),
         victron_measurement=env.get("VICTRON_MEASUREMENT", "victron"),
         pv_power_field=env.get("PV_POWER_FIELD", "pv_power"),
+        charge_state_field=env.get("CHARGE_STATE_FIELD", "charge_state"),
         geo_bucket=env.get("GEO_BUCKET", "buspi"),
         geo_measurement=env.get("GEO_MEASUREMENT", "geo"),
         port=int(env.get("SUNCAST_PORT", "8090")),

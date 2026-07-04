@@ -107,6 +107,18 @@ class Store:
             daily_wh = json.loads(row[0])
             return daily_wh.get(day)
 
+    def snapshot_hourly_for_day(self, day: str) -> dict[str, float] | None:
+        """Hourly forecast {iso_ts: watts} from the EARLIEST snapshot of `day`."""
+        with self._lock:
+            cursor = self.conn.execute(
+                "SELECT hourly FROM snapshots WHERE day = ? ORDER BY created_at ASC LIMIT 1",
+                (day,),
+            )
+            row = cursor.fetchone()
+            if row is None:
+                return None
+            return {ts: watts for ts, watts in json.loads(row[0])}
+
     def snapshot_id_for_day(self, day: str) -> int | None:
         """Id of the earliest snapshot created on `day` (UTC), or None."""
         with self._lock:

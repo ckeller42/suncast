@@ -71,3 +71,11 @@ def test_panel_roundtrip_uses_dataclass_fields(tmp_path):
     p = PanelConfig(panel_wp=300, tilt_deg=10.0, azimuth_deg=-5.0, charger_limit_w=180, damping=0.1)
     st.set_panel(p)
     assert asdict(st.get_panel()) == asdict(p)
+
+
+def test_snapshot_hourly_for_day(tmp_path):
+    st = store(tmp_path)
+    assert st.snapshot_hourly_for_day("2026-07-03") is None
+    st.save_snapshot(S, 48.77, 9.16, PanelConfig())
+    hourly = st.snapshot_hourly_for_day("2026-07-03")
+    assert hourly == {TS.isoformat(): 100.0}

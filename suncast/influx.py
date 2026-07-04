@@ -6,17 +6,12 @@ from suncast.config import Config
 QueryFn = Callable[[str], list[tuple[datetime, float]]]
 
 
-def flux_actual_hourly(cfg: Config, day: str) -> str:
-    """Build flux query for hourly PV power on a given day.
+def flux_hourly_field(cfg: Config, day: str, field: str) -> str:
+    """Build a flux query for hourly means of one Victron field on a given day.
 
-    Args:
-        cfg: Config with victron_bucket, victron_measurement, pv_power_field
-        day: ISO date string (e.g., "2026-07-02")
-
-    Returns:
-        Flux query string with range, measurement filter, aggregateWindow.
+    Windows are labeled by their START (timeSrc: "_start") so hour keys line up
+    with the forecast's hourly points.
     """
-    # Parse day and calculate next day for range
     start = f"{day}T00:00:00Z"
     next_day = (datetime.fromisoformat(day) + timedelta(days=1)).date().isoformat()
     end = f"{next_day}T00:00:00Z"
@@ -25,8 +20,8 @@ def flux_actual_hourly(cfg: Config, day: str) -> str:
         f'from(bucket: "{cfg.victron_bucket}")\n'
         f"  |> range(start: {start}, stop: {end})\n"
         f'  |> filter(fn: (r) => r._measurement == "{cfg.victron_measurement}")\n'
-        f'  |> filter(fn: (r) => r._field == "{cfg.pv_power_field}")\n'
-        f"  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)\n"
+        f'  |> filter(fn: (r) => r._field == "{field}")\n'
+        f'  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false, timeSrc: "_start")\n'
     )
 
 
@@ -43,24 +38,28 @@ class InfluxReader:
         self.cfg = cfg
         self.query = query
 
-    def actual_day_wh(self, day: str) -> float | None:
-        """Sum hourly power means for a day as Wh.
+    def actual_bulk_hourly(self, day: str) -> dict[str, float]:
+        """Hourly absorbed Wh for hours the charger ran UNTHROTTLED (bulk).
 
-        Args:
-            day: ISO date string
+        pv_power measures what the battery accepted; in absorption/float the
+        MPPT throttles and the value says nothing about panel potential. Only
+        bulk hours (charge_state mean in [2.5, 3.5)) are a valid comparison
+        against the forecast.
 
         Returns:
-            Sum of hourly means (W) for the day, or None if < 4 buckets.
+            {iso_hour_start_utc: wh} for bulk hours with power data. Empty dict
+            when no bulk hours (or no data) exist for the day.
         """
-        flux = flux_actual_hourly(self.cfg, day)
-        rows = self.query(flux)
+        power = dict(self.query(flux_hourly_field(self.cfg, day, self.cfg.pv_power_field)))
+        state = dict(self.query(flux_hourly_field(self.cfg, day, self.cfg.charge_state_field)))
 
-        if len(rows) < 4:
-            return None
-
-        # Sum all values; each value is already a mean for 1h window
-        # so sum is in Wh (W × 1h = Wh)
-        return sum(value for _time, value in rows)
+        out: dict[str, float] = {}
+        for t, wh in power.items():
+            cs = state.get(t)
+            if cs is None or not (2.5 <= cs < 3.5):
+                continue
+            out[t.astimezone(UTC).isoformat()] = wh
+        return out
 
     def latest_location(self) -> tuple[float, float, float, float] | None:
         """Get latest lat, lon, range_m and age from geo bucket.

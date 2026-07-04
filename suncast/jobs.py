@@ -11,6 +11,11 @@ from suncast.store import Store
 
 logger = logging.getLogger(__name__)
 
+# Bulk-only calibration guards: need at least this many unthrottled hours and
+# this much forecast energy over them for an honest ratio sample.
+MIN_BULK_HOURS = 2
+MIN_BULK_FORECAST_WH = 50.0
+
 
 @dataclass
 class Deps:
@@ -63,24 +68,36 @@ def daily_tick(d: Deps) -> dict[str, Any]:
             logger.exception("daily_tick phase failed")
             result["skipped"] = str(e)
 
-    # Phase 2: Ratio for yesterday
+    # Phase 2: Ratio for yesterday — BULK HOURS ONLY.
+    # pv_power measures what the battery accepted; with a full battery the MPPT
+    # throttles (absorption/float) and actuals say nothing about panel potential.
+    # Compare only unthrottled (bulk) hours against the archived forecast for
+    # the SAME hours.
     try:
         if not d.store.has_ratio(yesterday_str):
-            forecast_wh = d.store.snapshot_forecast_wh(yesterday_str)
-            actual_wh = d.influx.actual_day_wh(yesterday_str)
+            hourly_fc = d.store.snapshot_hourly_for_day(yesterday_str)
+            bulk = d.influx.actual_bulk_hourly(yesterday_str)
 
-            if forecast_wh is not None and actual_wh is not None and forecast_wh > 0:
-                ratio = actual_wh / forecast_wh
-                daily_ratio = DailyRatio(
-                    day=yesterday_str,
-                    forecast_wh=forecast_wh,
-                    actual_wh=actual_wh,
-                    ratio=ratio,
-                )
-
-                snapshot_id = d.store.snapshot_id_for_day(yesterday_str) or 0
-                d.store.save_ratio(daily_ratio, snapshot_id)
-                result["ratio_day"] = yesterday_str
+            if hourly_fc is None:
+                pass  # no archived snapshot for yesterday
+            elif len(bulk) < MIN_BULK_HOURS:
+                if result["skipped"] is None:
+                    result["skipped"] = f"only {len(bulk)} bulk hour(s) — battery full, no signal"
+            else:
+                forecast_wh = sum(hourly_fc.get(h, 0.0) for h in bulk)
+                actual_wh = sum(bulk.values())
+                if forecast_wh >= MIN_BULK_FORECAST_WH:
+                    daily_ratio = DailyRatio(
+                        day=yesterday_str,
+                        forecast_wh=forecast_wh,
+                        actual_wh=actual_wh,
+                        ratio=actual_wh / forecast_wh,
+                    )
+                    snapshot_id = d.store.snapshot_id_for_day(yesterday_str) or 0
+                    d.store.save_ratio(daily_ratio, snapshot_id)
+                    result["ratio_day"] = yesterday_str
+                elif result["skipped"] is None:
+                    result["skipped"] = "bulk-hour forecast below threshold — no signal"
     except Exception as e:
         logger.exception("daily_tick phase failed")
         if result["skipped"] is None:

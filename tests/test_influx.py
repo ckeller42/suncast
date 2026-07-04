@@ -1,9 +1,10 @@
 from datetime import UTC, datetime
 
 from suncast.config import load
-from suncast.influx import InfluxReader, flux_actual_hourly
+from suncast.influx import InfluxReader, flux_hourly_field
 
-CFG = load({"INFLUX_URL": "http://x", "INFLUX_ORG": "home", "INFLUXDB_TOKEN": "t"})
+BASE = {"INFLUX_URL": "http://x", "INFLUX_ORG": "home", "INFLUXDB_TOKEN": "t"}
+CFG = load(BASE)
 
 
 def t(h):
@@ -11,27 +12,41 @@ def t(h):
 
 
 def test_flux_contains_day_window_and_names():
-    q = flux_actual_hourly(CFG, "2026-07-02")
+    q = flux_hourly_field(CFG, "2026-07-02", CFG.pv_power_field)
     for frag in [
         'from(bucket: "victron")',
         "2026-07-02T00:00:00Z",
         "2026-07-03T00:00:00Z",
         '"pv_power"',
         "aggregateWindow(every: 1h",
+        'timeSrc: "_start"',
         'r._measurement == "victron"',
     ]:
         assert frag in q
 
 
-def test_actual_day_wh_sums_hourly_means():
-    rows = [(t(h), 100.0) for h in range(6, 18)]  # 12 h × 100 W
-    r = InfluxReader(CFG, lambda q: rows)
-    assert r.actual_day_wh("2026-07-02") == 1200.0
+def _bulk_query(power_rows, state_rows):
+    def q(flux):
+        if '"pv_power"' in flux:
+            return power_rows
+        if '"charge_state"' in flux:
+            return state_rows
+        return []
+
+    return q
 
 
-def test_actual_day_wh_none_when_too_sparse():
-    r = InfluxReader(CFG, lambda q: [(t(6), 100.0)])  # 1 bucket < 4
-    assert r.actual_day_wh("2026-07-02") is None
+def test_actual_bulk_hourly_keeps_only_bulk_hours():
+    power = [(t(8), 90.0), (t(9), 120.0), (t(10), 8.0), (t(11), 5.0)]
+    state = [(t(8), 3.0), (t(9), 3.2), (t(10), 4.0), (t(11), 5.0)]  # 10/11h throttled
+    r = InfluxReader(CFG, _bulk_query(power, state))
+    out = r.actual_bulk_hourly("2026-07-02")
+    assert out == {t(8).isoformat(): 90.0, t(9).isoformat(): 120.0}
+
+
+def test_actual_bulk_hourly_empty_when_no_state_data():
+    r = InfluxReader(CFG, _bulk_query([(t(8), 90.0)], []))
+    assert r.actual_bulk_hourly("2026-07-02") == {}
 
 
 def test_latest_location_combines_fields():
@@ -58,7 +73,7 @@ def test_latest_location_survives_missing_range():
             return [(now, 48.77)]
         if '"lon"' in flux:
             return [(now, 9.16)]
-        return []  # no range_m samples
+        return []
 
     lat, lon, rng, age = InfluxReader(CFG, q).latest_location()
     assert (lat, lon, rng) == (48.77, 9.16, 0.0)
