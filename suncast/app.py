@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates
 from suncast import jobs
 from suncast.calibrate import apply_factor, best_window, calibration, metrics
 from suncast.config import Config, load
-from suncast.influx import InfluxReader, make_query_fn
+from suncast.influx import InfluxReader, make_query_fn, make_write_fn
 from suncast.jobs import Deps
 from suncast.models import PanelConfig
 from suncast.providers.forecast_solar import (
@@ -55,6 +55,8 @@ async def _job_loop(app: FastAPI) -> None:
                     store=app.state.store,
                     influx=app.state.influx,
                     now=lambda: datetime.now(UTC),
+                    write=getattr(app.state, "write", None),
+                    forecast_measurement=app.state.cfg.forecast_measurement,
                 )
             )
         except Exception:
@@ -62,7 +64,7 @@ async def _job_loop(app: FastAPI) -> None:
         await asyncio.sleep(JOB_INTERVAL_S)
 
 
-def create_app(cfg: Config, provider, store: Store, influx) -> FastAPI:
+def create_app(cfg: Config, provider, store: Store, influx, write=None) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         task = None
@@ -77,6 +79,7 @@ def create_app(cfg: Config, provider, store: Store, influx) -> FastAPI:
     app = FastAPI(lifespan=lifespan)
     app.state.cfg = cfg
     app.state.provider = provider
+    app.state.write = write
     app.state.store = store
     app.state.influx = influx
 
@@ -234,7 +237,7 @@ def main() -> None:
     store = Store(cfg.db_path)
     provider = ForecastSolar(default_fetch, cfg.cache_ttl_s)
     influx = InfluxReader(cfg, make_query_fn(cfg))
-    app = create_app(cfg, provider, store, influx)
+    app = create_app(cfg, provider, store, influx, write=make_write_fn(cfg))
     uvicorn.run(app, host="0.0.0.0", port=cfg.port)
 
 

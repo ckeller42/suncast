@@ -13,6 +13,7 @@ class Config:
     charge_state_field: str = "charge_state"
     geo_bucket: str = "buspi"
     geo_measurement: str = "geo"
+    forecast_measurement: str = "solar_forecast"
     port: int = 8090
     tz: str = "Europe/Berlin"
     db_path: str = "/var/lib/suncast/suncast.db"
@@ -45,6 +46,7 @@ def load(env: Mapping[str, str]) -> Config:
         charge_state_field=env.get("CHARGE_STATE_FIELD", "charge_state"),
         geo_bucket=env.get("GEO_BUCKET", "buspi"),
         geo_measurement=env.get("GEO_MEASUREMENT", "geo"),
+        forecast_measurement=env.get("FORECAST_MEASUREMENT", "solar_forecast"),
         port=int(env.get("SUNCAST_PORT", "8090")),
         tz=env.get("SUNCAST_TZ", "Europe/Berlin"),
         db_path=env.get("SUNCAST_DB", "/var/lib/suncast/suncast.db"),

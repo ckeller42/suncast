@@ -77,3 +77,15 @@ def test_latest_location_survives_missing_range():
 
     lat, lon, rng, age = InfluxReader(CFG, q).latest_location()
     assert (lat, lon, rng) == (48.77, 9.16, 0.0)
+
+
+def test_forecast_lines_line_protocol():
+    from suncast.influx import forecast_lines
+
+    hourly = [["2026-07-04T12:00:00+00:00", 240.0, 192.0]]
+    lines = forecast_lines("solar_forecast", "forecast.solar", hourly, 0.8)
+    assert len(lines) == 1
+    line = lines[0]
+    assert line.startswith("solar_forecast,provider=forecast.solar ")
+    assert "raw_w=240.0" in line and "corrected_w=192.0" in line and "factor=0.8" in line
+    assert line.endswith(" 1783166400000000000")  # 2026-07-04T12:00Z in ns

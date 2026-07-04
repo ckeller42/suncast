@@ -4,6 +4,23 @@ from datetime import UTC, datetime, timedelta
 from suncast.config import Config
 
 QueryFn = Callable[[str], list[tuple[datetime, float]]]
+WriteFn = Callable[[list[str]], None]  # line-protocol lines -> write to the bucket
+
+
+def forecast_lines(measurement: str, provider: str, hourly: list, factor: float) -> list[str]:
+    """Line-protocol points for a forecast: one per hour, raw + corrected W.
+
+    hourly is [[iso_ts, raw_w, corrected_w], ...] (apply_factor shape); factor
+    is recorded for traceability. Timestamps in ns.
+    """
+    lines = []
+    for iso, raw_w, corr_w in hourly:
+        ts_ns = int(datetime.fromisoformat(iso).timestamp() * 1_000_000_000)
+        lines.append(
+            f"{measurement},provider={provider} "
+            f"raw_w={float(raw_w)},corrected_w={float(corr_w)},factor={float(factor)} {ts_ns}"
+        )
+    return lines
 
 
 def flux_hourly_field(cfg: Config, day: str, field: str) -> str:
@@ -109,6 +126,21 @@ class InfluxReader:
         if not rows:
             return None
         return rows[0]
+
+
+def make_write_fn(cfg: Config) -> WriteFn:
+    """Create a write function using influxdb_client (synchronous writes)."""
+    from influxdb_client import InfluxDBClient
+    from influxdb_client.client.write_api import SYNCHRONOUS
+
+    client = InfluxDBClient(url=cfg.influx_url, org=cfg.influx_org, token=cfg.influx_token)
+    write_api = client.write_api(write_options=SYNCHRONOUS)
+    bucket = cfg.victron_bucket  # shared buspi bucket
+
+    def write(lines: list[str]) -> None:
+        write_api.write(bucket=bucket, record=lines)
+
+    return write
 
 
 def make_query_fn(cfg: Config) -> QueryFn:

@@ -106,3 +106,23 @@ def test_low_bulk_forecast_skips_ratio(tmp_path):
 def test_no_location_skips_snapshot_gracefully(tmp_path):
     out = daily_tick(deps(tmp_path, loc=None))
     assert not out["snapshotted"] and out["skipped"]
+
+
+def test_snapshot_mirrors_forecast_to_influx_when_write_set(tmp_path):
+    captured = []
+    d = deps(tmp_path)
+    d.write = captured.extend
+    daily_tick(d)
+    assert captured, "expected forecast lines written"
+    assert all(line.startswith("solar_forecast,provider=forecast.solar ") for line in captured)
+    assert any("raw_w=100.0" in line for line in captured)
+
+
+def test_write_failure_does_not_break_tick(tmp_path):
+    def boom(lines):
+        raise RuntimeError("influx down")
+
+    d = deps(tmp_path)
+    d.write = boom
+    out = daily_tick(d)
+    assert out["snapshotted"] is True  # snapshot survives a failed mirror

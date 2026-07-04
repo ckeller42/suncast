@@ -4,7 +4,8 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
 
-from suncast.influx import InfluxReader
+from suncast.calibrate import apply_factor, calibration
+from suncast.influx import InfluxReader, WriteFn, forecast_lines
 from suncast.models import DailyRatio
 from suncast.providers.forecast_solar import ForecastSolar
 from suncast.store import Store
@@ -25,6 +26,8 @@ class Deps:
     store: Store
     influx: InfluxReader
     now: Callable[[], datetime]
+    write: WriteFn | None = None  # optional: mirror forecasts to InfluxDB (display-only)
+    forecast_measurement: str = "solar_forecast"
 
 
 def daily_tick(d: Deps) -> dict[str, Any]:
@@ -64,6 +67,20 @@ def daily_tick(d: Deps) -> dict[str, Any]:
                 # Save snapshot
                 d.store.save_snapshot(series, lat, lon, panel)
                 result["snapshotted"] = True
+
+                # Optional display-only mirror to InfluxDB (SQLite stays the
+                # source of truth for calibration).
+                if d.write is not None:
+                    try:
+                        cal = calibration([r.ratio for r in d.store.ratios()])
+                        out = apply_factor(series, cal)
+                        d.write(
+                            forecast_lines(
+                                d.forecast_measurement, series.provider, out["hourly"], cal.factor
+                            )
+                        )
+                    except Exception:
+                        logger.exception("forecast influx write failed")
         except Exception as e:
             logger.exception("daily_tick phase failed")
             result["skipped"] = str(e)
