@@ -100,7 +100,7 @@ suncast computes a calibration factor daily by:
 4. Taking the **median** ratio, clamped to `[SUNCAST_CLAMP_LO, SUNCAST_CLAMP_HI]` (default 0.3–1.3).
 5. If fewer than `SUNCAST_MIN_SAMPLES` (default 5) samples exist, the factor is **uncalibrated** (1.0).
 
-The factor is applied to all future hourly points (multiplied by the raw forecast). You always see both curves: red is raw, green is calibrated.
+The factor is applied to all future hourly points (multiplied by the raw forecast). You always see both curves: gray is raw, blue is calibrated.
 
 **Important:** calibration uses historical snapshots in the database—not refetched data. If your actual generation changed, or the forecast changes post-hoc, the historical ratio stays as recorded. This is honest: it shows what the system knew at the time.
 

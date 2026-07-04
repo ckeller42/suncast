@@ -6,3 +6,5 @@ dist/
 .ruff_cache/
 *.db
 .superpowers/
+.coverage
+*.egg-info/

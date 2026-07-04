@@ -96,6 +96,13 @@ def create_app(cfg: Config, provider, store: Store, influx) -> FastAPI:
         lon = body.get("lon")
         if lat is None or lon is None:
             raise HTTPException(status_code=422, detail="lat and lon are required")
+        if (
+            not isinstance(lat, int | float)
+            or isinstance(lat, bool)
+            or not isinstance(lon, int | float)
+            or isinstance(lon, bool)
+        ):
+            raise HTTPException(status_code=422, detail="lat and lon must be numbers")
 
         days = body.get("days", 3)
         if not isinstance(days, int) or not (1 <= days <= 6):
@@ -133,7 +140,9 @@ def create_app(cfg: Config, provider, store: Store, influx) -> FastAPI:
     @app.get("/api/history")
     def history(days: int = 30):
         ratios_newest_first = store.ratios()
-        ratios_oldest_first = list(reversed(ratios_newest_first))[:days]
+        # Newest `days` rows, then chronological for display. (Reverse-then-
+        # slice kept the OLDEST rows once history exceeded `days`.)
+        ratios_oldest_first = list(reversed(ratios_newest_first[:days]))
 
         raw_pairs = [(r.forecast_wh, r.actual_wh) for r in ratios_oldest_first]
         metrics_raw = metrics(raw_pairs)

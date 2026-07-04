@@ -116,3 +116,21 @@ def test_lifespan_runs_daily_tick(tmp_path, monkeypatch):
         while not calls and time.time() < deadline:
             time.sleep(0.05)
     assert calls, "daily_tick was never invoked by the lifespan loop"
+
+
+def test_history_keeps_newest_days(tmp_path):
+    from suncast.models import DailyRatio
+
+    store = Store(str(tmp_path / "h.db"))
+    for i in range(1, 10):  # 9 days: 2026-06-01 .. 2026-06-09
+        store.save_ratio(DailyRatio(f"2026-06-{i:02d}", 1000, 800, 0.8), 0)
+    app = create_app(CFG, P(), store, FakeInflux())
+    app.state.no_jobs = True
+    c = TestClient(app)
+    days = c.get("/api/history?days=3").json()["days"]
+    assert [d["day"] for d in days] == ["2026-06-07", "2026-06-08", "2026-06-09"]
+
+
+def test_forecast_non_numeric_latlon_is_422(tmp_path):
+    c = client(tmp_path)
+    assert c.post("/api/forecast", json={"lat": "nope", "lon": 9.16}).status_code == 422
