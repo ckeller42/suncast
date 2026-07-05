@@ -1,0 +1,19 @@
+suncast/backtest.py
+  s_8e1271a435025a::t_7925f91c29a191 283-288,290-292
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a295cbcfb8bdbe446eb535384b3b75e67c04c12c",
+  "prompts": {},
+  "sessions": {
+    "s_8e1271a435025a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_8e1271a435025a",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
