@@ -1,0 +1,23 @@
+CHANGELOG.md
+  s_c4ec2f214df2ca::t_22a5561f1c968f 1-62
+README.md
+  s_c4ec2f214df2ca::t_e389b41e837947 7,9,74-78,86,90-91,103-106,108
+pyproject.toml
+  s_c4ec2f214df2ca::t_19ba188cf638b3 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "a5a30c9c0abb6fe3373502b5219e4dc528b32039",
+  "prompts": {},
+  "sessions": {
+    "s_c4ec2f214df2ca": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_c4ec2f214df2ca",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
