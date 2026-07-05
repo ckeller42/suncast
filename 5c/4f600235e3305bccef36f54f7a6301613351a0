@@ -1,0 +1,19 @@
+tests/test_backtest.py
+  s_d1db078d48bacc::t_e907a4c235184f 76-100
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "5c4f600235e3305bccef36f54f7a6301613351a0",
+  "prompts": {},
+  "sessions": {
+    "s_d1db078d48bacc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_d1db078d48bacc",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
