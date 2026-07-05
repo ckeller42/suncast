@@ -33,7 +33,9 @@ def test_day_location_uses_geo_mean():
 
 
 def test_pv_first_day():
-    q = lambda f: [(datetime(2026, 5, 31, 18, tzinfo=UTC), 0.0)]
+    def q(flux):
+        return [(datetime(2026, 5, 31, 18, tzinfo=UTC), 0.0)]
+
     assert pv_first_day(q, CFG) == date(2026, 5, 31)
 
 
