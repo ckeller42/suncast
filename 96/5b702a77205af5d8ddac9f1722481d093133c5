@@ -1,0 +1,19 @@
+suncast/influx.py
+  s_93b3aa77cf562a::t_acce6496d904e4 205-207
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "965b702a77205af5d8ddac9f1722481d093133c5",
+  "prompts": {},
+  "sessions": {
+    "s_93b3aa77cf562a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_93b3aa77cf562a",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
