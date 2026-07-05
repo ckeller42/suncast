@@ -1,0 +1,21 @@
+suncast/pvmodel.py
+  s_2cc02e3b190623::t_7801bf5f9b6d81 32-62
+tests/test_pvmodel.py
+  s_2cc02e3b190623::t_3e780efa1fa9af 35-69
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "dc0a96a94bedd4b85f11170d19f4736b744cad5c",
+  "prompts": {},
+  "sessions": {
+    "s_2cc02e3b190623": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_2cc02e3b190623",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
