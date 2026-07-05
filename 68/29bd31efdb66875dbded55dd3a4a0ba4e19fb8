@@ -1,0 +1,19 @@
+docs/superpowers/results/2026-07-05-backtest.md
+  s_781b0ec4668c67::t_814a245f2f7c77 1-47
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6829bd31efdb66875dbded55dd3a4a0ba4e19fb8",
+  "prompts": {},
+  "sessions": {
+    "s_781b0ec4668c67": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_781b0ec4668c67",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
