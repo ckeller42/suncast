@@ -1,0 +1,21 @@
+suncast/influx.py
+  s_04012536c39964::t_a8be7b0cc4edae 165-168
+tests/test_influx.py
+  s_04012536c39964::t_4bde983c2328c3 118-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "f7702cbdc08a35da58a6ba9144db9236de2dcffc",
+  "prompts": {},
+  "sessions": {
+    "s_04012536c39964": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_04012536c39964",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
