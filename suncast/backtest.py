@@ -1,9 +1,14 @@
 """Offline harness: score PV potential models against Victron history."""
 
+import json
 from collections import defaultdict
 from dataclasses import dataclass
+from datetime import UTC, date, datetime, timedelta
 from statistics import median
 
+from suncast.backfill import day_location, pv_first_day
+from suncast.config import Config
+from suncast.influx import QueryFn, flux_hourly_field
 from suncast.models import PanelConfig
 from suncast.pvmodel import Params, expected_w, fit_m2
 
@@ -80,3 +85,69 @@ def score_lodo(rows: list[HourRow], panel: PanelConfig) -> tuple[float, float]:
             if r.day == held:
                 pairs.append((expected_w(r.gti, r.t_air, panel, params), r.pv))
     return mae_bias(pairs)
+
+
+ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
+
+
+def archive_url_temp(lat: float, lon: float, day: str) -> str:
+    return (
+        f"{ARCHIVE_URL}?latitude={lat:.4f}&longitude={lon:.4f}"
+        f"&start_date={day}&end_date={day}"
+        f"&hourly=global_tilted_irradiance,temperature_2m&timezone=UTC"
+    )
+
+
+def parse_archive(status: int, body: bytes) -> dict[str, tuple[float, float]]:
+    if status != 200:
+        raise ValueError(f"HTTP {status}")
+    try:
+        data = json.loads(body)
+        times = data["hourly"]["time"]
+        gtis = data["hourly"]["global_tilted_irradiance"]
+        temps = data["hourly"]["temperature_2m"]
+    except (ValueError, KeyError, TypeError) as e:
+        raise ValueError(f"bad archive body: {e}") from e
+    out: dict[str, tuple[float, float]] = {}
+    for t, g, temp in zip(times, gtis, temps, strict=False):
+        dt = datetime.fromisoformat(t)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=UTC)
+        out[dt.isoformat()] = (float(g or 0.0), float(temp or 0.0))
+    return out
+
+
+def _hourly(query: QueryFn, cfg: Config, day: str, field: str) -> dict[str, float]:
+    rows = query(flux_hourly_field(cfg, day, field))
+    return {t.astimezone(UTC).isoformat(): v for t, v in rows if t is not None}
+
+
+def assemble(
+    cfg: Config,
+    query: QueryFn,
+    fetch,
+    home: tuple[float, float],
+    end_day: date,
+    days_back: int = 60,
+) -> list[HourRow]:
+    """Hourly ERA5 (gti, temp) + Victron (pv, cs) rows over the pv history."""
+    start = pv_first_day(query, cfg)
+    if start is None:
+        return []
+    rows: list[HourRow] = []
+    d = start
+    while d <= end_day:
+        day = d.isoformat()
+        d += timedelta(days=1)
+        try:
+            lat, lon = day_location(query, cfg, day, home)
+            status, body = fetch(archive_url_temp(lat, lon, day))
+            era = parse_archive(status, body)
+            pv = _hourly(query, cfg, day, cfg.pv_power_field)
+            cs = _hourly(query, cfg, day, cfg.charge_state_field)
+        except Exception:  # noqa: BLE001 - one bad day must not abort assembly
+            continue
+        for hour, (gti, t_air) in era.items():
+            if hour in pv and hour in cs:
+                rows.append(HourRow(hour, day, gti, t_air, pv[hour], cs[hour]))
+    return rows

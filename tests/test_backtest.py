@@ -98,3 +98,37 @@ def test_score_lodo_penalizes_when_days_disagree():
             )
     mae, _bias = score_lodo(rows, PANEL)
     assert mae > 10.0
+
+
+def test_archive_url_has_both_hourly_vars():
+    from suncast.backtest import archive_url_temp
+
+    u = archive_url_temp(48.83, 8.28, "2026-06-01")
+    assert "archive-api.open-meteo.com" in u
+    assert "global_tilted_irradiance" in u and "temperature_2m" in u
+    assert "start_date=2026-06-01" in u and "end_date=2026-06-01" in u
+    assert "timezone=UTC" in u
+
+
+def test_parse_archive_maps_hour_to_gti_and_temp():
+    from suncast.backtest import parse_archive
+
+    body = (
+        b'{"hourly": {"time": ["2026-06-01T11:00", "2026-06-01T12:00"],'
+        b' "global_tilted_irradiance": [500.0, 800.0],'
+        b' "temperature_2m": [18.0, 24.0]}}'
+    )
+    out = parse_archive(200, body)
+    assert out["2026-06-01T11:00:00+00:00"] == (500.0, 18.0)
+    assert out["2026-06-01T12:00:00+00:00"] == (800.0, 24.0)
+
+
+def test_parse_archive_errors():
+    import pytest
+
+    from suncast.backtest import parse_archive
+
+    with pytest.raises(ValueError):
+        parse_archive(500, b"")
+    with pytest.raises(ValueError):
+        parse_archive(200, b"not json")
