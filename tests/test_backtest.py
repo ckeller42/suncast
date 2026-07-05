@@ -175,3 +175,27 @@ def test_render_table_contains_headers_and_rows():
     ]
     txt = render_table(scores)
     assert "MAE" in txt and "M0 flat" in txt
+
+
+def test_m2_cleanday_metric_is_out_of_sample():
+    # Clean days (all bulk) with different efficiency. If the clean-day metric
+    # were scored in-sample (the fit graded on its own data), M2's clean-day MAE
+    # would be ~0. Scored leave-one-day-out (correct), it must be clearly nonzero.
+    from suncast.pvmodel import Params, expected_w
+
+    rows = []
+    for day, k in (("D1", 0.35), ("D2", 0.55), ("D3", 0.45)):
+        p = Params(k=k, gamma=0.0)
+        for gti in (200.0, 350.0, 500.0, 650.0):
+            rows.append(
+                HourRow(
+                    f"{day}T{int(gti // 100):02d}:00",
+                    day,
+                    gti,
+                    20.0,
+                    expected_w(gti, 20.0, PANEL, p),
+                    3.0,
+                )
+            )
+    m2 = next(s for s in run(rows, PANEL) if s["name"].startswith("M2"))
+    assert m2["mae_cleanday"] > 5.0

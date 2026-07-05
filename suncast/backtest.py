@@ -1,6 +1,7 @@
 """Offline harness: score PV potential models against Victron history."""
 
 import json
+import logging
 import os
 from collections import defaultdict
 from dataclasses import dataclass
@@ -13,6 +14,8 @@ from suncast.influx import QueryFn, flux_hourly_field
 from suncast.models import PanelConfig
 from suncast.providers.open_meteo import default_fetch
 from suncast.pvmodel import Params, expected_w, fit_m2
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -96,7 +99,8 @@ def archive_url_temp(lat: float, lon: float, day: str) -> str:
     return (
         f"{ARCHIVE_URL}?latitude={lat:.4f}&longitude={lon:.4f}"
         f"&start_date={day}&end_date={day}"
-        f"&hourly=global_tilted_irradiance,temperature_2m&timezone=UTC"
+        f"&hourly=global_tilted_irradiance,temperature_2m"
+        f"&tilt=0&azimuth=0&timezone=UTC"
     )
 
 
@@ -148,6 +152,7 @@ def assemble(
             pv = _hourly(query, cfg, day, cfg.pv_power_field)
             cs = _hourly(query, cfg, day, cfg.charge_state_field)
         except Exception:  # noqa: BLE001 - one bad day must not abort assembly
+            logger.warning("backtest assemble skipped %s", day, exc_info=True)
             continue
         for hour, (gti, t_air) in era.items():
             if hour in pv and hour in cs:
@@ -155,48 +160,74 @@ def assemble(
     return rows
 
 
-def _cleanday_mae(rows: list[HourRow], panel: PanelConfig, params: Params) -> float:
+def _model_params(name: str, train: list[HourRow], panel: PanelConfig) -> "Params | None":
+    """Fit a model's params on the training rows. None if unfittable (M2 singular)."""
+    if name == "M0":
+        return Params(k=flat_k(train, panel), gamma=0.0)
+    if name == "M1":
+        return Params(k=flat_k(train, panel), gamma=-0.004)
+    return fit_m2([(r.gti, r.t_air, r.pv) for r in bulk_rows(train)], panel)
+
+
+def score_model_lodo(
+    name: str, rows: list[HourRow], panel: PanelConfig
+) -> tuple[float, float, float]:
+    """Leave-one-day-out (mae_bulk, bias, mae_cleanday) for one model.
+
+    EVERY model — flat or fitted — is refit on the other days and scored on the
+    held-out day, so all three are compared strictly out-of-sample (the flat k
+    for M0/M1 barely moves, but this keeps the comparison honest and puts the
+    clean-day safeguard out-of-sample too).
+    """
+    bulk = bulk_rows(rows)
+    days = sorted({r.day for r in bulk})
     clean = clean_days(rows)
-    by_day_pred: dict[str, float] = defaultdict(float)
-    by_day_act: dict[str, float] = defaultdict(float)
-    for r in rows:
-        if r.day in clean:
-            by_day_pred[r.day] += expected_w(r.gti, r.t_air, panel, params)
-            by_day_act[r.day] += r.pv
-    pairs = [(by_day_pred[d], by_day_act[d]) for d in clean]
-    return mae_bias(pairs)[0]
+    bulk_pairs: list[tuple[float, float]] = []
+    cd_pairs: list[tuple[float, float]] = []
+    for held in days:
+        train = [r for r in rows if r.day != held]
+        params = _model_params(name, train, panel)
+        if params is None:
+            continue
+        for r in bulk:
+            if r.day == held:
+                bulk_pairs.append((expected_w(r.gti, r.t_air, panel, params), r.pv))
+        if held in clean:
+            pred = sum(expected_w(r.gti, r.t_air, panel, params) for r in rows if r.day == held)
+            act = sum(r.pv for r in rows if r.day == held)
+            cd_pairs.append((pred, act))
+    mae_bulk, bias = mae_bias(bulk_pairs)
+    mae_cd, _ = mae_bias(cd_pairs)
+    return mae_bulk, bias, mae_cd
 
 
 def run(rows: list[HourRow], panel: PanelConfig) -> list[dict]:
-    """Score M0/M1/M2 and return one summary dict per model (M0 first)."""
+    """Score M0/M1/M2 strictly leave-one-day-out (M0 first). vs_m0 = % MAE change."""
+    # Full-data params only for the DISPLAYED k/gamma (what we would deploy); the
+    # scores are out-of-sample via score_model_lodo.
     k = flat_k(rows, panel)
-    m0 = Params(k=k, gamma=0.0)
-    m1 = Params(k=k, gamma=-0.004)
-    fit = fit_m2([(r.gti, r.t_air, r.pv) for r in bulk_rows(rows)], panel)
+    full_fit = fit_m2([(r.gti, r.t_air, r.pv) for r in bulk_rows(rows)], panel)
+
+    specs = [("M0 flat", k, 0.0), ("M1 temp(fixed)", k, -0.004)]
+    if full_fit is not None:
+        specs.append(("M2 temp(fitted)", full_fit.k, full_fit.gamma))
 
     scores: list[dict] = []
-
-    def add(name, mae, bias, cleanday, kk, gg):
+    for name, kk, gg in specs:
+        mae, bias, cd = score_model_lodo(name.split()[0], rows, panel)
         scores.append(
             {
                 "name": name,
                 "mae_bulk": mae,
                 "bias": bias,
-                "mae_cleanday": cleanday,
+                "mae_cleanday": cd,
                 "vs_m0": 0.0,
                 "k": kk,
                 "gamma": gg,
             }
         )
 
-    mae0, bias0 = score_fixed(rows, panel, m0)
-    add("M0 flat", mae0, bias0, _cleanday_mae(rows, panel, m0), k, 0.0)
-    mae1, bias1 = score_fixed(rows, panel, m1)
-    add("M1 temp(fixed)", mae1, bias1, _cleanday_mae(rows, panel, m1), k, -0.004)
-    if fit is not None:
-        mae2, bias2 = score_lodo(rows, panel)
-        add("M2 temp(fitted,LODO)", mae2, bias2, _cleanday_mae(rows, panel, fit), fit.k, fit.gamma)
-
+    mae0 = scores[0]["mae_bulk"]
     for s in scores:
         s["vs_m0"] = 0.0 if mae0 == 0 else (s["mae_bulk"] - mae0) / mae0 * 100.0
     return scores
@@ -213,18 +244,35 @@ def render_table(scores: list[dict]) -> str:
     lines.append("")
     for s in scores:
         lines.append(f"  {s['name']}: k={s['k']:.3f} gamma={s['gamma']:.4f}")
+    lines.append("")
+    lines.append("all metrics are leave-one-day-out (out-of-sample); vs M0 negative = better")
     return "\n".join(lines)
+
+
+def _read_panel(db_path: str) -> PanelConfig:
+    """Read the stored panel config read-only (never creates a row)."""
+    import json
+    import sqlite3
+
+    try:
+        conn = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
+        row = conn.execute("SELECT json FROM panel WHERE id = 1").fetchone()
+        conn.close()
+        if row:
+            return PanelConfig(**json.loads(row[0]))
+    except Exception:
+        logger.warning("no stored panel; using defaults", exc_info=True)
+    return PanelConfig()
 
 
 def main() -> None:
     from suncast.config import load
     from suncast.influx import make_query_fn
-    from suncast.store import Store
 
     cfg = load(os.environ)
     query = make_query_fn(cfg)
     home = (float(os.environ.get("HOME_LAT", "48.77")), float(os.environ.get("HOME_LON", "9.16")))
-    panel = Store(cfg.db_path).get_panel()
+    panel = _read_panel(cfg.db_path)
     end_day = datetime.now(UTC).date() - timedelta(days=1)
     rows = assemble(cfg, query, default_fetch, home, end_day)
     scores = run(rows, panel)
