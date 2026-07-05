@@ -73,3 +73,28 @@ def test_score_lodo_predicts_held_out_day():
             rows.append(_bulk_row(day, int(gti // 100), gti, t_air, expected))
     mae, _bias = score_lodo(rows, PANEL)
     assert mae < 1e-6
+
+
+def test_score_lodo_penalizes_when_days_disagree():
+    # Two days with different efficiency (k). Correct LODO trains on the OTHER
+    # day, so held-out predictions are genuinely wrong -> nonzero MAE. A leak
+    # (training on the held-out day) would fit it exactly -> ~0 MAE. This pins
+    # the r.day != held exclusion that noiseless data can't distinguish.
+    from suncast.pvmodel import Params, expected_w
+
+    rows = []
+    for day, k in (("D1", 0.4), ("D2", 0.8)):
+        p = Params(k=k, gamma=0.0)
+        for gti in (200.0, 400.0, 600.0):
+            rows.append(
+                HourRow(
+                    f"{day}T{int(gti // 100):02d}:00",
+                    day,
+                    gti,
+                    20.0,
+                    expected_w(gti, 20.0, PANEL, p),
+                    3.0,
+                )
+            )
+    mae, _bias = score_lodo(rows, PANEL)
+    assert mae > 10.0
