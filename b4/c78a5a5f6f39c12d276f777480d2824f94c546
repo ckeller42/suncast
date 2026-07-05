@@ -1,0 +1,33 @@
+deploy/suncast.env.example
+  s_e21cb3209a83ea::t_99ea76d632189a 15-17
+suncast/app.py
+  s_e21cb3209a83ea::t_88eb9354e641ed 28-29,32-43,83-85,100,130-131,154-168,171,176,285-286,288-290
+suncast/config.py
+  s_e21cb3209a83ea::t_c6c5d0650a606c 18-19,54-55
+suncast/providers/open_meteo.py
+  s_e21cb3209a83ea::t_9c888d453c145e 1-103
+suncast/static/app.js
+  s_e21cb3209a83ea::t_0244b0c6bfb720 37,39,45,48-49,55-61,78,238-248,258-263,267,273
+suncast/static/style.css
+  s_e21cb3209a83ea::t_fbe48b8fb00042 169-176
+tests/test_api.py
+  s_e21cb3209a83ea::t_617fc6d26b2978 155-188
+tests/test_open_meteo.py
+  s_e21cb3209a83ea::t_ad6d4bd9ead15f 1-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "b4c78a5a5f6f39c12d276f777480d2824f94c546",
+  "prompts": {},
+  "sessions": {
+    "s_e21cb3209a83ea": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_e21cb3209a83ea",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
