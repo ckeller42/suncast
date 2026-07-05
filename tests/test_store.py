@@ -79,3 +79,10 @@ def test_snapshot_hourly_for_day(tmp_path):
     st.save_snapshot(S, 48.77, 9.16, PanelConfig())
     hourly = st.snapshot_hourly_for_day("2026-07-03")
     assert hourly == {TS.isoformat(): 100.0}
+
+
+def test_snapshot_location_for_day(tmp_path):
+    st = store(tmp_path)
+    assert st.snapshot_location_for_day("2026-07-03") is None
+    st.save_snapshot(S, 48.77, 9.16, PanelConfig())
+    assert st.snapshot_location_for_day("2026-07-03") == (48.77, 9.16)

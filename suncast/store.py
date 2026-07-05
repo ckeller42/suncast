@@ -128,6 +128,16 @@ class Store:
             row = cursor.fetchone()
             return row[0] if row else None
 
+    def snapshot_location_for_day(self, day: str) -> tuple[float, float] | None:
+        """(lat, lon) of the EARLIEST snapshot created on `day`, or None."""
+        with self._lock:
+            cursor = self.conn.execute(
+                "SELECT lat, lon FROM snapshots WHERE day = ? ORDER BY created_at ASC LIMIT 1",
+                (day,),
+            )
+            row = cursor.fetchone()
+            return (row[0], row[1]) if row else None
+
     def has_snapshot_today(self, day: str) -> bool:
         with self._lock:
             cursor = self.conn.execute("SELECT 1 FROM snapshots WHERE day = ? LIMIT 1", (day,))

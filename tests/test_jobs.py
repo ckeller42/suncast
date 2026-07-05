@@ -35,8 +35,8 @@ class FakeProvider:
 
 
 class FakeInflux:
-    def __init__(self, loc, bulk):
-        self._loc, self._bulk = loc, bulk
+    def __init__(self, loc, bulk, drift=0.0):
+        self._loc, self._bulk, self._drift = loc, bulk, drift
 
     def latest_location(self):
         return self._loc
@@ -44,12 +44,15 @@ class FakeInflux:
     def actual_bulk_hourly(self, day):
         return self._bulk
 
+    def max_drift_km(self, day, ref_lat, ref_lon):
+        return self._drift
 
-def deps(tmp_path, loc=(48.77, 9.16, 20.0, 60.0), bulk=None):
+
+def deps(tmp_path, loc=(48.77, 9.16, 20.0, 60.0), bulk=None, drift=0.0):
     return Deps(
         FakeProvider(),
         Store(str(tmp_path / "s.db")),
-        FakeInflux(loc, bulk if bulk is not None else {}),
+        FakeInflux(loc, bulk if bulk is not None else {}, drift),
         lambda: NOW,
     )
 
@@ -126,3 +129,29 @@ def test_write_failure_does_not_break_tick(tmp_path):
     d.write = boom
     out = daily_tick(d)
     assert out["snapshotted"] is True  # snapshot survives a failed mirror
+
+
+def test_travel_day_skips_ratio(tmp_path):
+    # Enough bulk hours + forecast, but the van roamed 137 km -> skip.
+    bulk = {
+        hour("2026-07-02", 8).isoformat(): 80.0,
+        hour("2026-07-02", 9).isoformat(): 160.0,
+    }
+    d = deps(tmp_path, bulk=bulk, drift=137.0)
+    y = series_for("2026-07-02", {8: 100, 9: 200}, datetime(2026, 7, 2, 5, tzinfo=UTC))
+    d.store.save_snapshot(y, 48.77, 9.16, PanelConfig())
+    out = daily_tick(d)
+    assert out["ratio_day"] is None
+    assert "location mismatch" in (out["skipped"] or "")
+    assert d.store.ratios() == []
+
+
+def test_parked_day_still_calibrates(tmp_path):
+    bulk = {
+        hour("2026-07-02", 8).isoformat(): 80.0,
+        hour("2026-07-02", 9).isoformat(): 160.0,
+    }
+    d = deps(tmp_path, bulk=bulk, drift=2.0)  # within threshold
+    y = series_for("2026-07-02", {8: 100, 9: 200}, datetime(2026, 7, 2, 5, tzinfo=UTC))
+    d.store.save_snapshot(y, 48.77, 9.16, PanelConfig())
+    assert daily_tick(d)["ratio_day"] == "2026-07-02"

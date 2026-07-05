@@ -1,10 +1,34 @@
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
+from math import asin, cos, radians, sin, sqrt
 
 from suncast.config import Config
 
 QueryFn = Callable[[str], list[tuple[datetime, float]]]
 WriteFn = Callable[[list[str]], None]  # line-protocol lines -> write to the bucket
+
+
+def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Great-circle distance between two lat/lon points, in km."""
+    r = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    return 2 * r * asin(sqrt(a))
+
+
+def flux_geo_track(cfg: Config, day: str, field: str) -> str:
+    """All values of a geo field over one UTC day (hourly-sampled)."""
+    start = f"{day}T00:00:00Z"
+    next_day = (datetime.fromisoformat(day) + timedelta(days=1)).date().isoformat()
+    end = f"{next_day}T00:00:00Z"
+    return (
+        f'from(bucket: "{cfg.geo_bucket}")\n'
+        f"  |> range(start: {start}, stop: {end})\n"
+        f'  |> filter(fn: (r) => r._measurement == "{cfg.geo_measurement}")\n'
+        f'  |> filter(fn: (r) => r._field == "{field}")\n'
+        f"  |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)\n"
+    )
 
 
 def forecast_lines(measurement: str, provider: str, hourly: list, factor: float) -> list[str]:
@@ -77,6 +101,19 @@ class InfluxReader:
                 continue
             out[t.astimezone(UTC).isoformat()] = wh
         return out
+
+    def max_drift_km(self, day: str, ref_lat: float, ref_lon: float) -> float | None:
+        """Furthest the van roamed from (ref_lat, ref_lon) during `day`, in km.
+
+        Uses the geo track (celloc). None when no track exists for the day —
+        caller decides whether that means "assume parked" or "skip".
+        """
+        lats = dict(self.query(flux_geo_track(self.cfg, day, "lat")))
+        lons = dict(self.query(flux_geo_track(self.cfg, day, "lon")))
+        common = sorted(set(lats) & set(lons))
+        if not common:
+            return None
+        return max(haversine_km(ref_lat, ref_lon, lats[t], lons[t]) for t in common)
 
     def latest_location(self) -> tuple[float, float, float, float] | None:
         """Get latest lat, lon, range_m and age from geo bucket.

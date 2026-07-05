@@ -58,6 +58,7 @@ async def _job_loop(app: FastAPI) -> None:
                     now=lambda: datetime.now(UTC),
                     write=getattr(app.state, "write", None),
                     forecast_measurement=app.state.cfg.forecast_measurement,
+                    drift_km_max=app.state.cfg.drift_km_max,
                 )
             )
         except Exception:

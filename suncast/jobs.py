@@ -28,6 +28,7 @@ class Deps:
     now: Callable[[], datetime]
     write: WriteFn | None = None  # optional: mirror forecasts to InfluxDB (display-only)
     forecast_measurement: str = "solar_forecast"
+    drift_km_max: float = 20.0
 
 
 def daily_tick(d: Deps) -> dict[str, Any]:
@@ -95,8 +96,21 @@ def daily_tick(d: Deps) -> dict[str, Any]:
             hourly_fc = d.store.snapshot_hourly_for_day(yesterday_str)
             bulk = d.influx.actual_bulk_hourly(yesterday_str)
 
+            # Location guard: the forecast was made at yesterday's overnight
+            # spot. If the van then drove far, actuals were harvested under a
+            # different sky — skip rather than learn noise. (We cannot re-fetch
+            # a past forecast for the real daytime location: Forecast.Solar
+            # serves no past data, so the archived snapshot is all we have.)
+            ref = d.store.snapshot_location_for_day(yesterday_str)
+            drift = None
+            if ref is not None:
+                drift = d.influx.max_drift_km(yesterday_str, ref[0], ref[1])
+
             if hourly_fc is None:
                 pass  # no archived snapshot for yesterday
+            elif drift is not None and drift > d.drift_km_max:
+                if result["skipped"] is None:
+                    result["skipped"] = f"moved {drift:.0f} km — location mismatch, no signal"
             elif len(bulk) < MIN_BULK_HOURS:
                 if result["skipped"] is None:
                     result["skipped"] = f"only {len(bulk)} bulk hour(s) — battery full, no signal"

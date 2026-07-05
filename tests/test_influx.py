@@ -89,3 +89,29 @@ def test_forecast_lines_line_protocol():
     assert line.startswith("solar_forecast,provider=forecast.solar ")
     assert "raw_w=240.0" in line and "corrected_w=192.0" in line and "factor=0.8" in line
     assert line.endswith(" 1783166400000000000")  # 2026-07-04T12:00Z in ns
+
+
+def test_haversine_km_known_distance():
+    from suncast.influx import haversine_km
+
+    # Stuttgart -> Munich ~190 km
+    d = haversine_km(48.7758, 9.1829, 48.1372, 11.5756)
+    assert 185 < d < 200
+    assert haversine_km(48.0, 9.0, 48.0, 9.0) == 0.0
+
+
+def test_max_drift_km_uses_furthest_track_point():
+    # Track: stays put at 08h, 137 km away at 14h.
+    def q(flux):
+        if '"lat"' in flux:
+            return [(t(8), 48.77), (t(14), 48.14)]
+        if '"lon"' in flux:
+            return [(t(8), 9.18), (t(14), 11.58)]
+        return []
+
+    drift = InfluxReader(CFG, q).max_drift_km("2026-07-02", 48.77, 9.18)
+    assert drift is not None and 130 < drift < 200
+
+
+def test_max_drift_km_none_without_track():
+    assert InfluxReader(CFG, lambda flux: []).max_drift_km("2026-07-02", 48.77, 9.18) is None
