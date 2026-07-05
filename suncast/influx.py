@@ -162,7 +162,10 @@ class InfluxReader:
         rows = self.query(flux)
         if not rows:
             return None
-        return rows[0]
+        # geo has multiple tag-series (source=wifi/cell, radio=…); last() returns
+        # one row per series. Take the newest overall — a stale cell fix must not
+        # shadow a fresh wifi one.
+        return max(rows, key=lambda r: r[0])
 
 
 def make_write_fn(cfg: Config) -> WriteFn:

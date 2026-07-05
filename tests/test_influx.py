@@ -115,3 +115,21 @@ def test_max_drift_km_uses_furthest_track_point():
 
 def test_max_drift_km_none_without_track():
     assert InfluxReader(CFG, lambda flux: []).max_drift_km("2026-07-02", 48.77, 9.18) is None
+
+
+def test_latest_location_picks_freshest_series():
+    # geo returns one row per tag-series: a stale cell fix + a fresh wifi fix.
+    old = datetime(2026, 7, 5, 9, 49, tzinfo=UTC)
+    new = datetime(2026, 7, 5, 15, 24, tzinfo=UTC)
+
+    def q(flux):
+        if '"lat"' in flux:
+            return [(old, 48.96), (new, 48.83)]
+        if '"lon"' in flux:
+            return [(old, 9.14), (new, 8.28)]
+        if '"range_m"' in flux:
+            return [(old, 653.0), (new, 20.0)]
+        return []
+
+    lat, lon, rng, _age = InfluxReader(CFG, q).latest_location()
+    assert (lat, lon, rng) == (48.83, 8.28, 20.0)  # wifi (newer) wins over stale cell
