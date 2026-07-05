@@ -1,0 +1,35 @@
+deploy/suncast.env.example
+  s_28f2599ba724a8::t_d8b6d8289a7dc4 13-14
+suncast/app.py
+  s_28f2599ba724a8::t_73cbfb1f011100 61
+suncast/config.py
+  s_28f2599ba724a8::t_f47f4f5ce5a3a2 17,51
+suncast/influx.py
+  s_28f2599ba724a8::t_0125a8ea152e8b 3,11-33,105-117
+suncast/jobs.py
+  s_28f2599ba724a8::t_f4c14270aca5dc 31,99-108,111-113
+suncast/store.py
+  s_28f2599ba724a8::t_963166e12ac34a 131-140
+tests/test_influx.py
+  s_28f2599ba724a8::t_e82d3436762edf 92-117
+tests/test_jobs.py
+  s_28f2599ba724a8::t_4ec6230d8d134f 38-39,47-48,50-51,55,132-157
+tests/test_store.py
+  s_28f2599ba724a8::t_b7a5c933a7b8ab 82-88
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "26e0a81d0ffed4cd36d737be45b33d66bdbdf4ba",
+  "prompts": {},
+  "sessions": {
+    "s_28f2599ba724a8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_28f2599ba724a8",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
