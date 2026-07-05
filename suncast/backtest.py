@@ -280,8 +280,14 @@ def main() -> None:
     print(f"assembled {len(rows)} hourly rows, {len(clean_days(rows))} clean days\n")
     print(table)
 
-    out = "docs/superpowers/results/2026-07-05-backtest.md"
-    os.makedirs(os.path.dirname(out), exist_ok=True)
+    # Output dir is configurable and the filename carries the run date, so
+    # re-running later (more data) never overwrites a prior verdict.
+    run_date = datetime.now(UTC).date()
+    out_dir = os.environ.get("BACKTEST_OUT_DIR", "docs/superpowers/results")
+    out = f"{out_dir}/{run_date}-backtest.md"
+    os.makedirs(out_dir, exist_ok=True)
     with open(out, "w") as f:
-        f.write(f"# Backtest results ({end_day})\n\n```text\n{table}\n```\n")
+        f.write(
+            f"# Backtest results ({run_date}, data through {end_day})\n\n```text\n{table}\n```\n"
+        )
     print(f"\nwrote {out}")
