@@ -1,0 +1,19 @@
+docs/superpowers/plans/2026-07-05-suncast-backtest.md
+  s_87cb40cfcbe6e1::t_7c29d23a95560c 1-877
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "92b10746c451227a4ac234fc2ccd16b5db9f11ce",
+  "prompts": {},
+  "sessions": {
+    "s_87cb40cfcbe6e1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_87cb40cfcbe6e1",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
