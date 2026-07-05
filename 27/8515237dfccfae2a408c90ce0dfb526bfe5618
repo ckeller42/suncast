@@ -1,0 +1,19 @@
+docs/superpowers/specs/2026-07-05-suncast-backtest-design.md
+  s_1dccea91605154::t_89044fbc4d21a8 1-139
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "278515237dfccfae2a408c90ce0dfb526bfe5618",
+  "prompts": {},
+  "sessions": {
+    "s_1dccea91605154": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b137c4a5-b11b-4b8b-b6d6-16b437dd2993",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
