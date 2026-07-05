@@ -152,3 +152,37 @@ def test_geocode_upstream_error_is_502(tmp_path):
     c = client(tmp_path)
     c.app.state.geocode_fetch = lambda url, headers: (503, b"")
     assert c.get("/api/geocode?q=x").status_code == 502
+
+
+def test_forecast_includes_secondary_comparison(tmp_path):
+    c = client(tmp_path)
+
+    class FakeSecondary:
+        def forecast(self, lat, lon, panel, days):
+            from datetime import UTC, datetime
+
+            from suncast.models import ForecastPoint, ForecastSeries
+
+            pts = [ForecastPoint(datetime(2026, 7, 5, 12, tzinfo=UTC), 300.0)]
+            return ForecastSeries(pts, {"2026-07-05": 300.0}, "open-meteo", datetime.now(UTC))
+
+    c.app.state.provider_secondary = FakeSecondary()
+    r = c.post("/api/forecast", json={"lat": 48.77, "lon": 9.16, "days": 2})
+    assert r.status_code == 200
+    body = r.json()
+    assert body["comparison"]["provider"] == "open-meteo"
+    assert body["comparison"]["daily"]["2026-07-05"] == 300.0
+    assert body["provider"]  # primary provider name present
+
+
+def test_forecast_secondary_failure_does_not_break(tmp_path):
+    c = client(tmp_path)
+
+    class BoomSecondary:
+        def forecast(self, *a, **k):
+            raise RuntimeError("down")
+
+    c.app.state.provider_secondary = BoomSecondary()
+    r = c.post("/api/forecast", json={"lat": 48.77, "lon": 9.16, "days": 2})
+    assert r.status_code == 200
+    assert r.json()["comparison"] is None

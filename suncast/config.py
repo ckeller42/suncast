@@ -15,6 +15,8 @@ class Config:
     geo_measurement: str = "geo"
     forecast_measurement: str = "solar_forecast"
     drift_km_max: float = 20.0
+    provider: str = "open_meteo"
+    provider_secondary: str = "forecast_solar"
     port: int = 8090
     tz: str = "Europe/Berlin"
     db_path: str = "/var/lib/suncast/suncast.db"
@@ -49,6 +51,8 @@ def load(env: Mapping[str, str]) -> Config:
         geo_measurement=env.get("GEO_MEASUREMENT", "geo"),
         forecast_measurement=env.get("FORECAST_MEASUREMENT", "solar_forecast"),
         drift_km_max=float(env.get("DRIFT_KM_MAX", "20")),
+        provider=env.get("PROVIDER", "open_meteo"),
+        provider_secondary=env.get("PROVIDER_SECONDARY", "forecast_solar"),
         port=int(env.get("SUNCAST_PORT", "8090")),
         tz=env.get("SUNCAST_TZ", "Europe/Berlin"),
         db_path=env.get("SUNCAST_DB", "/var/lib/suncast/suncast.db"),

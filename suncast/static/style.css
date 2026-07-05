@@ -166,3 +166,11 @@ td {
 .addr-results:empty { display: none; }
 .addr-results li { padding: 6px 8px; cursor: pointer; font-size: 0.9em; }
 .addr-results li:hover { background: #eff6ff; }
+
+/* provider comparison */
+.legend { font-size: 0.85em; color: #475569; margin: 4px 0; }
+.legend .k { display: inline-block; width: 14px; height: 3px; vertical-align: middle; margin: 0 3px; }
+.legend .blue { background: #2563eb; }
+.legend .gray { background: #94a3b8; }
+.legend .amber { background: #f59e0b; }
+.wh-line.spread { color: #b45309; font-size: 0.9em; }

@@ -34,22 +34,31 @@ function fmtTime(iso) {
   return new Date(iso).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-// ---- svgChart: two polylines (raw vs corrected) from hourly series ----
+// ---- svgChart: raw vs corrected (+ optional secondary provider) ----
 
-function svgChart(hourly) {
+function svgChart(hourly, compare) {
   const w = 600;
   const h = 150;
   if (!hourly || hourly.length === 0) {
     return `<svg viewBox="0 0 ${w} ${h}"></svg>`;
   }
+  const cmp = compare && compare.length ? compare : null;
   const rawVals = hourly.map((p) => p[1]);
   const corrVals = hourly.map((p) => p[2]);
-  const maxV = Math.max(1, ...rawVals, ...corrVals);
+  const cmpVals = cmp ? cmp.map((p) => p[1]) : [];
+  const maxV = Math.max(1, ...rawVals, ...corrVals, ...cmpVals);
   const n = hourly.length;
   const x = (i) => (n <= 1 ? 0 : (i / (n - 1)) * w);
   const y = (v) => h - (v / maxV) * h;
 
   const toPoints = (idx) => hourly.map((p, i) => `${x(i)},${y(p[idx])}`).join(" ");
+  // Secondary shares the y-scale; x by its own index fraction (same day span).
+  const cmpPoints = cmp
+    ? cmp.map((p, i) => `${cmp.length <= 1 ? 0 : (i / (cmp.length - 1)) * w},${y(p[1])}`).join(" ")
+    : "";
+  const cmpLine = cmp
+    ? `<polyline points="${cmpPoints}" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="4 3" />`
+    : "";
 
   // Axis labels: y in W (0..max), x in local time. xkcd 833 compliance.
   const padL = 40;
@@ -66,6 +75,7 @@ function svgChart(hourly) {
     <text x="${w}" y="${h + 13}" text-anchor="end" font-size="11" fill="#64748b">${fmt(t1)}</text>
     <polyline points="${toPoints(1)}" fill="none" stroke="#94a3b8" stroke-width="2" />
     <polyline points="${toPoints(2)}" fill="none" stroke="#2563eb" stroke-width="2" />
+    ${cmpLine}
   </svg>`;
 }
 
@@ -225,7 +235,17 @@ function renderResults(json) {
   const f = json.factor;
   const badge = f.calibrated ? "" : '<span class="badge">uncalibrated</span>';
   const factorLine = `<p>factor ${f.factor.toFixed(2)} (p25 ${f.p25.toFixed(2)} / p75 ${f.p75.toFixed(2)}, ${f.samples} samples) ${badge}</p>`;
-  const chart = `<div class="card">${svgChart(json.hourly)}</div>`;
+
+  const cmp = json.comparison;
+  const cmpHourly = cmp ? cmp.hourly : null;
+  const chart = `<div class="card">${svgChart(json.hourly, cmpHourly)}</div>`;
+
+  // Legend + provider line. Secondary (dashed amber) is raw/uncalibrated.
+  const legend = cmp
+    ? `<p class="legend"><span class="k blue"></span>${json.provider} corrected ·
+       <span class="k gray"></span>raw ·
+       <span class="k amber"></span>${cmp.provider} (raw)</p>`
+    : `<p class="legend">provider: ${json.provider}</p>`;
 
   const days = Object.keys(json.daily).sort();
   const cards = days
@@ -235,15 +255,22 @@ function renderResults(json) {
       const windowLine = bw
         ? `best window ${fmtTime(bw.start)}–${fmtTime(bw.end)} (${fmtWh(bw.wh)})`
         : "no best window";
+      // Spread vs secondary (agreement/disagreement signal).
+      let spreadLine = "";
+      if (cmp && cmp.daily[day] != null && d.corrected_wh > 0) {
+        const pct = ((cmp.daily[day] - d.corrected_wh) / d.corrected_wh) * 100;
+        spreadLine = `<div class="wh-line spread">${cmp.provider} ${fmtWh(cmp.daily[day])} (${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%)</div>`;
+      }
       return `<div class="card day-card">
         <h3>${day}</h3>
         <div class="wh-line">raw ${fmtWh(d.raw_wh)} · corrected ${fmtWh(d.corrected_wh)} (${fmtWh(d.lower_wh)}–${fmtWh(d.upper_wh)})</div>
+        ${spreadLine}
         <div class="wh-line">${windowLine}</div>
       </div>`;
     })
     .join("");
 
-  results.innerHTML = factorLine + chart + cards;
+  results.innerHTML = factorLine + legend + chart + cards;
 }
 
 // ---- history page -----------------------------------------------------

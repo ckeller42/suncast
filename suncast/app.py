@@ -25,7 +25,21 @@ from suncast.providers.forecast_solar import (
     RateLimited,
     default_fetch,
 )
+from suncast.providers.open_meteo import OpenMeteo
+from suncast.providers.open_meteo import default_fetch as om_fetch
 from suncast.store import Store
+
+
+def build_provider(name: str, cfg: Config):
+    """Construct a forecast provider by name, or None for an empty name."""
+    if name == "open_meteo":
+        return OpenMeteo(om_fetch, cfg.cache_ttl_s)
+    if name == "forecast_solar":
+        return ForecastSolar(default_fetch, cfg.cache_ttl_s)
+    if not name:
+        return None
+    raise ValueError(f"unknown provider: {name}")
+
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +80,9 @@ async def _job_loop(app: FastAPI) -> None:
         await asyncio.sleep(JOB_INTERVAL_S)
 
 
-def create_app(cfg: Config, provider, store: Store, influx, write=None) -> FastAPI:
+def create_app(
+    cfg: Config, provider, store: Store, influx, write=None, provider_secondary=None
+) -> FastAPI:
     @asynccontextmanager
     async def lifespan(app: FastAPI):
         task = None
@@ -81,6 +97,7 @@ def create_app(cfg: Config, provider, store: Store, influx, write=None) -> FastA
     app = FastAPI(lifespan=lifespan)
     app.state.cfg = cfg
     app.state.provider = provider
+    app.state.provider_secondary = provider_secondary
     app.state.write = write
     app.state.store = store
     app.state.influx = influx
@@ -110,8 +127,8 @@ def create_app(cfg: Config, provider, store: Store, influx, write=None) -> FastA
             raise HTTPException(status_code=422, detail="lat and lon must be numbers")
 
         days = body.get("days", 3)
-        if not isinstance(days, int) or not (1 <= days <= 6):
-            raise HTTPException(status_code=422, detail="days must be int 1..6")
+        if not isinstance(days, int) or not (1 <= days <= 16):
+            raise HTTPException(status_code=422, detail="days must be int 1..16")
 
         panel_body = body.get("panel")
         if panel_body:
@@ -134,12 +151,29 @@ def create_app(cfg: Config, provider, store: Store, influx, write=None) -> FastA
         out = apply_factor(series, cal)
         best = best_window(series.points)
 
+        # Secondary provider: raw comparison only (uncalibrated), best-effort —
+        # a failure here never breaks the primary forecast.
+        comparison = None
+        sec = getattr(app.state, "provider_secondary", None)
+        if sec is not None:
+            try:
+                sec_series = sec.forecast(lat, lon, panel, days)
+                comparison = {
+                    "provider": sec_series.provider,
+                    "hourly": [[p.ts.isoformat(), p.watts] for p in sec_series.points],
+                    "daily": sec_series.daily_wh,
+                }
+            except Exception:
+                logger.exception("secondary provider failed")
+
         return {
             "location": {"lat": lat, "lon": lon},
+            "provider": series.provider,
             "factor": _cal_dict(cal),
             "hourly": out["hourly"],
             "daily": out["daily"],
             "best_windows": best,
+            "comparison": comparison,
         }
 
     @app.get("/api/history")
@@ -248,9 +282,12 @@ def create_app(cfg: Config, provider, store: Store, influx, write=None) -> FastA
 def main() -> None:
     cfg = load(os.environ)
     store = Store(cfg.db_path)
-    provider = ForecastSolar(default_fetch, cfg.cache_ttl_s)
+    provider = build_provider(cfg.provider, cfg)
+    secondary = build_provider(cfg.provider_secondary, cfg)
     influx = InfluxReader(cfg, make_query_fn(cfg))
-    app = create_app(cfg, provider, store, influx, write=make_write_fn(cfg))
+    app = create_app(
+        cfg, provider, store, influx, write=make_write_fn(cfg), provider_secondary=secondary
+    )
     uvicorn.run(app, host="0.0.0.0", port=cfg.port)
 
 
