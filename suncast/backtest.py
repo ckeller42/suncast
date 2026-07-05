@@ -1,6 +1,7 @@
 """Offline harness: score PV potential models against Victron history."""
 
 import json
+import os
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
@@ -10,6 +11,7 @@ from suncast.backfill import day_location, pv_first_day
 from suncast.config import Config
 from suncast.influx import QueryFn, flux_hourly_field
 from suncast.models import PanelConfig
+from suncast.providers.open_meteo import default_fetch
 from suncast.pvmodel import Params, expected_w, fit_m2
 
 
@@ -151,3 +153,87 @@ def assemble(
             if hour in pv and hour in cs:
                 rows.append(HourRow(hour, day, gti, t_air, pv[hour], cs[hour]))
     return rows
+
+
+def _cleanday_mae(rows: list[HourRow], panel: PanelConfig, params: Params) -> float:
+    clean = clean_days(rows)
+    by_day_pred: dict[str, float] = defaultdict(float)
+    by_day_act: dict[str, float] = defaultdict(float)
+    for r in rows:
+        if r.day in clean:
+            by_day_pred[r.day] += expected_w(r.gti, r.t_air, panel, params)
+            by_day_act[r.day] += r.pv
+    pairs = [(by_day_pred[d], by_day_act[d]) for d in clean]
+    return mae_bias(pairs)[0]
+
+
+def run(rows: list[HourRow], panel: PanelConfig) -> list[dict]:
+    """Score M0/M1/M2 and return one summary dict per model (M0 first)."""
+    k = flat_k(rows, panel)
+    m0 = Params(k=k, gamma=0.0)
+    m1 = Params(k=k, gamma=-0.004)
+    fit = fit_m2([(r.gti, r.t_air, r.pv) for r in bulk_rows(rows)], panel)
+
+    scores: list[dict] = []
+
+    def add(name, mae, bias, cleanday, kk, gg):
+        scores.append(
+            {
+                "name": name,
+                "mae_bulk": mae,
+                "bias": bias,
+                "mae_cleanday": cleanday,
+                "vs_m0": 0.0,
+                "k": kk,
+                "gamma": gg,
+            }
+        )
+
+    mae0, bias0 = score_fixed(rows, panel, m0)
+    add("M0 flat", mae0, bias0, _cleanday_mae(rows, panel, m0), k, 0.0)
+    mae1, bias1 = score_fixed(rows, panel, m1)
+    add("M1 temp(fixed)", mae1, bias1, _cleanday_mae(rows, panel, m1), k, -0.004)
+    if fit is not None:
+        mae2, bias2 = score_lodo(rows, panel)
+        add("M2 temp(fitted,LODO)", mae2, bias2, _cleanday_mae(rows, panel, fit), fit.k, fit.gamma)
+
+    for s in scores:
+        s["vs_m0"] = 0.0 if mae0 == 0 else (s["mae_bulk"] - mae0) / mae0 * 100.0
+    return scores
+
+
+def render_table(scores: list[dict]) -> str:
+    head = f"{'model':22} {'MAE(bulk,W)':>12} {'bias(W)':>9} {'MAE(clean,Wh)':>14} {'vs M0':>7}"
+    lines = [head, "-" * len(head)]
+    for s in scores:
+        lines.append(
+            f"{s['name']:22} {s['mae_bulk']:12.1f} {s['bias']:9.1f} "
+            f"{s['mae_cleanday']:14.0f} {s['vs_m0']:6.0f}%"
+        )
+    lines.append("")
+    for s in scores:
+        lines.append(f"  {s['name']}: k={s['k']:.3f} gamma={s['gamma']:.4f}")
+    return "\n".join(lines)
+
+
+def main() -> None:
+    from suncast.config import load
+    from suncast.influx import make_query_fn
+    from suncast.store import Store
+
+    cfg = load(os.environ)
+    query = make_query_fn(cfg)
+    home = (float(os.environ.get("HOME_LAT", "48.77")), float(os.environ.get("HOME_LON", "9.16")))
+    panel = Store(cfg.db_path).get_panel()
+    end_day = datetime.now(UTC).date() - timedelta(days=1)
+    rows = assemble(cfg, query, default_fetch, home, end_day)
+    scores = run(rows, panel)
+    table = render_table(scores)
+    print(f"assembled {len(rows)} hourly rows, {len(clean_days(rows))} clean days\n")
+    print(table)
+
+    out = "docs/superpowers/results/2026-07-05-backtest.md"
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    with open(out, "w") as f:
+        f.write(f"# Backtest results ({end_day})\n\n```text\n{table}\n```\n")
+    print(f"\nwrote {out}")

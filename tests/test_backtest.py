@@ -5,6 +5,8 @@ from suncast.backtest import (
     flat_k,
     is_bulk,
     mae_bias,
+    render_table,
+    run,
     score_fixed,
     score_lodo,
 )
@@ -132,3 +134,44 @@ def test_parse_archive_errors():
         parse_archive(500, b"")
     with pytest.raises(ValueError):
         parse_archive(200, b"not json")
+
+
+def test_run_reports_three_models_with_m0_baseline():
+    true = Params(k=0.5, gamma=-0.004)
+    rows = []
+    for day, t_air in (("D1", 5.0), ("D2", 20.0), ("D3", 35.0)):
+        for gti in (200.0, 400.0, 600.0):
+            rows.append(
+                HourRow(
+                    f"{day}T{int(gti // 100):02d}:00",
+                    day,
+                    gti,
+                    t_air,
+                    expected_w(gti, t_air, PANEL, true),
+                    3.0,
+                )
+            )
+    scores = run(rows, PANEL)
+    names = [s["name"] for s in scores]
+    assert names[0].startswith("M0") and any(n.startswith("M2") for n in names)
+    m0 = next(s for s in scores if s["name"].startswith("M0"))
+    assert m0["vs_m0"] == 0.0  # baseline compares to itself
+    # M2 fits the true law -> its out-of-sample MAE beats flat M0.
+    m2 = next(s for s in scores if s["name"].startswith("M2"))
+    assert m2["mae_bulk"] <= m0["mae_bulk"]
+
+
+def test_render_table_contains_headers_and_rows():
+    scores = [
+        {
+            "name": "M0 flat",
+            "mae_bulk": 12.3,
+            "bias": -1.0,
+            "mae_cleanday": 40.0,
+            "vs_m0": 0.0,
+            "k": 0.47,
+            "gamma": 0.0,
+        }
+    ]
+    txt = render_table(scores)
+    assert "MAE" in txt and "M0 flat" in txt

@@ -12,6 +12,7 @@ dev = ["pytest>=8", "ruff>=0.6"]
 [project.scripts]
 suncast = "suncast.app:main"
 suncast-backfill = "suncast.backfill:main"
+suncast-backtest = "suncast.backtest:main"
 
 [tool.ruff]
 line-length = 100

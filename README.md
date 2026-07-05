@@ -134,3 +134,10 @@ Formatter (check only):
 ```bash
 ruff format --check
 ```
+
+### Backtest (offline model evaluation)
+
+`suncast-backtest` scores candidate potential-prediction models (flat factor vs
+temperature-derate) against Victron history using ERA5 reanalysis, and writes a
+results table to `docs/superpowers/results/`. Run it on the Pi with the service
+env sourced (`HOME_LAT`/`HOME_LON` set the pre-location-history fallback).
