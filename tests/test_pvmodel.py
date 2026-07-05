@@ -32,3 +32,38 @@ def test_expected_w_caps_and_floors():
     assert expected_w(1000.0, 20.0, PANEL, p) == 200.0
     # Negative never happens, but a huge negative gamma must floor at 0.
     assert expected_w(500.0, 90.0, PANEL, Params(k=0.47, gamma=-1.0)) == 0.0
+
+
+def test_fit_two_var_recovers_linear_coeffs():
+    from suncast.pvmodel import fit_two_var
+
+    # y = 2*x1 + 3*x2 exactly.
+    pairs = [((1.0, 0.0), 2.0), ((0.0, 1.0), 3.0), ((1.0, 1.0), 5.0), ((2.0, 1.0), 7.0)]
+    a, b = fit_two_var(pairs)
+    assert abs(a - 2.0) < 1e-9 and abs(b - 3.0) < 1e-9
+
+
+def test_fit_two_var_singular_returns_none():
+    from suncast.pvmodel import fit_two_var
+
+    # All x2 == 0 -> normal-equations determinant is 0.
+    pairs = [((1.0, 0.0), 1.0), ((2.0, 0.0), 2.0)]
+    assert fit_two_var(pairs) is None
+
+
+def test_fit_m2_recovers_known_k_and_gamma():
+    from suncast.pvmodel import cell_temp, fit_m2
+
+    panel = PanelConfig()
+    true = Params(k=0.5, gamma=-0.004)
+    # Synthesize rows from the true model over varied conditions (avoid the cap:
+    # keep base*k well under 200 by using modest irradiance).
+    rows = []
+    for gti in (100.0, 250.0, 400.0, 550.0, 700.0):
+        for t_air in (5.0, 20.0, 35.0):
+            w = expected_w(gti, t_air, panel, true)
+            rows.append((gti, t_air, w))
+    fitted = fit_m2(rows, panel)
+    assert abs(fitted.k - 0.5) < 1e-6
+    assert abs(fitted.gamma - (-0.004)) < 1e-6
+    _ = cell_temp  # imported for clarity
