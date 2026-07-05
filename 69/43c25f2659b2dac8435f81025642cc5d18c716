@@ -1,0 +1,19 @@
+tests/test_backfill.py
+  s_32255aa339cb7b::t_1eecdd6bffd835 36-38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "6943c25f2659b2dac8435f81025642cc5d18c716",
+  "prompts": {},
+  "sessions": {
+    "s_32255aa339cb7b": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_32255aa339cb7b",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
