@@ -26,6 +26,17 @@ FetchFn = Callable[[str], tuple[int, bytes]]
 STC_IRRADIANCE = 1000.0  # W/m² at standard test conditions
 
 BASE_URL = "https://api.open-meteo.com/v1/forecast"
+ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
+
+
+def archive_url(lat: float, lon: float, start_date: str, end_date: str, panel: PanelConfig) -> str:
+    """URL for the ERA5 reanalysis archive (actual past tilted irradiance)."""
+    return (
+        f"{ARCHIVE_URL}?latitude={lat:.4f}&longitude={lon:.4f}"
+        f"&start_date={start_date}&end_date={end_date}"
+        f"&hourly=global_tilted_irradiance"
+        f"&tilt={panel.tilt_deg:g}&azimuth={panel.azimuth_deg:g}&timezone=UTC"
+    )
 
 
 def _watts_from_gti(gti: float, panel: PanelConfig) -> float:
