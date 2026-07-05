@@ -4,9 +4,9 @@
 [![Release](https://img.shields.io/github/v/release/ckeller42/suncast?label=release)](https://github.com/ckeller42/suncast/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-**suncast** is a camper solar forecast service that displays hourly and daily power output from a rooftop PV array, combined with a web map showing current location. The forecast uses [Forecast.Solar](https://forecast.solar/) (public tier) and self-calibrates against your actual PV history.
+**suncast** is a camper solar forecast service that displays hourly and daily power output from a rooftop PV array, combined with a web map (with address search) showing current location. The forecast uses [Open-Meteo](https://open-meteo.com/) (best regional model for Europe — DWD ICON-D2, 16-day horizon, no key) and self-calibrates against your actual PV history. [Forecast.Solar](https://forecast.solar/) is kept as a secondary provider shown for comparison.
 
-Why self-calibration? Weather forecasts contain systematic error. Forecast.Solar's irradiance models are good, but they don't know your panel tilt, soiling, or temperature coefficient. Over time—especially over 30 days—your system's generation pattern reveals the local bias. suncast computes a rolling 30-day median ratio of forecast to actual — using only **unthrottled (bulk) charge hours**, because once the battery is full the MPPT throttles and absorbed power no longer reflects panel potential — clamped 0.3–1.3 to ignore outlier days, then applies it to all future forecasts. You always see both the raw (gray) and corrected (blue) curves, so you know what the provider said and what your history says.
+Why self-calibration? Weather forecasts contain systematic error, and an irradiance model doesn't know your panel tilt, soiling, or temperature coefficient (Open-Meteo returns raw irradiance, so it reads structurally high). Over time—especially over 30 days—your system's generation pattern reveals the local bias. suncast computes a rolling 30-day median ratio of forecast to actual — using only **unthrottled (bulk) charge hours**, because once the battery is full the MPPT throttles and absorbed power no longer reflects panel potential — clamped 0.3–1.3 to ignore outlier days, then applies it to all future forecasts. You always see both the raw (gray) and corrected (blue) curves, so you know what the provider said and what your history says.
 
 <!-- screenshot: map + forecast page (add docs/screenshot.png when captured) -->
 
@@ -71,7 +71,11 @@ All configuration is via environment variables. Required variables are marked wi
 | `SUNCAST_MIN_SAMPLES` | `5` | Minimum samples required before calibration is applied |
 | `SUNCAST_CLAMP_LO` | `0.3` | Minimum calibration factor |
 | `SUNCAST_CLAMP_HI` | `1.3` | Maximum calibration factor |
-| `SUNCAST_CACHE_TTL_S` | `1800` | Forecast.Solar cache lifetime (seconds) |
+| `SUNCAST_CACHE_TTL_S` | `1800` | Provider forecast cache lifetime (seconds) |
+| `PROVIDER` | `open_meteo` | Primary provider (`open_meteo` \| `forecast_solar`) |
+| `PROVIDER_SECONDARY` | `forecast_solar` | Secondary provider shown for comparison (empty to disable) |
+| `FORECAST_MEASUREMENT` | `solar_forecast` | InfluxDB measurement for the mirrored forecast (Grafana) |
+| `DRIFT_KM_MAX` | `20` | Skip a day's calibration if the van roamed more than this many km |
 
 ## API
 
@@ -79,11 +83,12 @@ All requests/responses are JSON. POST `/api/forecast` returns both raw and calib
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/api/forecast` | POST | Fetch calibrated forecast for lat/lon (body: `{lat, lon, days?: 1-6, panel?: {panel_wp, tilt_deg, azimuth_deg, charger_limit_w, damping}}`) |
+| `/api/forecast` | POST | Fetch calibrated forecast for lat/lon (body: `{lat, lon, days?: 1-16, panel?: {panel_wp, tilt_deg, azimuth_deg, charger_limit_w, damping}}`); response includes a `comparison` block from the secondary provider |
 | `/api/history` | GET | Last 30 days of forecast–actual pairs and metrics (query: `days?`) |
 | `/api/config` | GET | Get stored panel configuration |
 | `/api/config` | POST | Store panel configuration (body: panel object) |
-| `/api/current-location` | GET | Latest GPS location from InfluxDB |
+| `/api/current-location` | GET | Freshest location fix from InfluxDB (across geo tag-series) |
+| `/api/geocode` | GET | Address search via OSM Nominatim (query: `q`) |
 
 Health check:
 
@@ -95,13 +100,12 @@ Health check:
 
 suncast computes a calibration factor daily by:
 
-1. Querying the last `SUNCAST_WINDOW_DAYS` (default 30) of actual PV generation from Victron MPPT (InfluxDB).
-2. Fetching the matching Forecast.Solar forecast for each day.
-3. Computing the ratio of forecast to actual for each day.
-4. Taking the **median** ratio, clamped to `[SUNCAST_CLAMP_LO, SUNCAST_CLAMP_HI]` (default 0.3–1.3).
-5. If fewer than `SUNCAST_MIN_SAMPLES` (default 5) samples exist, the factor is **uncalibrated** (1.0).
+1. Comparing each day's actual PV against the archived forecast **only over unthrottled (bulk) charge hours** — once the battery is full the MPPT throttles and absorbed power no longer reflects panel potential, so those hours are excluded.
+2. Skipping days with fewer than 2 bulk hours, under 50 Wh of bulk-hour forecast, or where the van roamed more than `DRIFT_KM_MAX` from the snapshot location (a travel day compares against the wrong sky).
+3. Taking the **median** ratio over `SUNCAST_WINDOW_DAYS` (default 30), clamped to `[SUNCAST_CLAMP_LO, SUNCAST_CLAMP_HI]` (default 0.3–1.3); P25/P75 give the confidence band.
+4. If fewer than `SUNCAST_MIN_SAMPLES` (default 5) samples exist, the factor is **uncalibrated** (1.0).
 
-The factor is applied to all future hourly points (multiplied by the raw forecast). You always see both curves: gray is raw, blue is calibrated.
+The factor is applied to all future hourly points of the primary provider. You always see both curves: gray is raw, blue is calibrated (plus a dashed amber secondary-provider curve for comparison).
 
 **Important:** calibration uses historical snapshots in the database—not refetched data. If your actual generation changed, or the forecast changes post-hoc, the historical ratio stays as recorded. This is honest: it shows what the system knew at the time.
 
