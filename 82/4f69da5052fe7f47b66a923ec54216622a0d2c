@@ -1,0 +1,25 @@
+pyproject.toml
+  s_9286e6467911d7::t_1892a2c325301a 14
+suncast/backfill.py
+  s_9286e6467911d7::t_95e957cb23cb37 1-138
+suncast/providers/open_meteo.py
+  s_9286e6467911d7::t_f840f60f69d4d1 29-39
+tests/test_backfill.py
+  s_9286e6467911d7::t_dbf2362ce6a244 1-73
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "824f69da5052fe7f47b66a923ec54216622a0d2c",
+  "prompts": {},
+  "sessions": {
+    "s_9286e6467911d7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_9286e6467911d7",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
