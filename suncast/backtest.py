@@ -2,6 +2,10 @@
 
 from collections import defaultdict
 from dataclasses import dataclass
+from statistics import median
+
+from suncast.models import PanelConfig
+from suncast.pvmodel import Params, expected_w, fit_m2
 
 
 @dataclass
@@ -43,3 +47,36 @@ def mae_bias(pairs: list[tuple[float, float]]) -> tuple[float, float]:
     mae = sum(abs(p - a) for p, a in pairs) / n
     bias = sum(p - a for p, a in pairs) / n
     return (mae, bias)
+
+
+def flat_k(rows: list[HourRow], panel: PanelConfig) -> float:
+    """Median daily bulk-hour ratio sum(pv)/sum(base); 1.0 if no data."""
+    act: dict[str, float] = defaultdict(float)
+    base: dict[str, float] = defaultdict(float)
+    for r in bulk_rows(rows):
+        act[r.day] += r.pv
+        base[r.day] += r.gti / 1000.0 * panel.panel_wp
+    ratios = [act[d] / base[d] for d in base if base[d] > 0]
+    return median(ratios) if ratios else 1.0
+
+
+def score_fixed(rows: list[HourRow], panel: PanelConfig, params: Params) -> tuple[float, float]:
+    """MAE/bias over bulk hours using expected_w."""
+    pairs = [(expected_w(r.gti, r.t_air, panel, params), r.pv) for r in bulk_rows(rows)]
+    return mae_bias(pairs)
+
+
+def score_lodo(rows: list[HourRow], panel: PanelConfig) -> tuple[float, float]:
+    """Leave-one-day-out MAE/bias for the fitted M2 model."""
+    bulk = bulk_rows(rows)
+    days = sorted({r.day for r in bulk})
+    pairs: list[tuple[float, float]] = []
+    for held in days:
+        train = [(r.gti, r.t_air, r.pv) for r in bulk if r.day != held]
+        params = fit_m2(train, panel)
+        if params is None:
+            continue
+        for r in bulk:
+            if r.day == held:
+                pairs.append((expected_w(r.gti, r.t_air, panel, params), r.pv))
+    return mae_bias(pairs)
