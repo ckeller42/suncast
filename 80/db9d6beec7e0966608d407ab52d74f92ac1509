@@ -1,0 +1,21 @@
+suncast/backtest.py
+  s_4d9486a23bb3f4::t_22bf4d4a045ddd 5-8,50-82
+tests/test_backtest.py
+  s_4d9486a23bb3f4::t_0e4000d1ab85d0 1-12,19-25,49-75
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "80db9d6beec7e0966608d407ab52d74f92ac1509",
+  "prompts": {},
+  "sessions": {
+    "s_4d9486a23bb3f4": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_4d9486a23bb3f4",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
