@@ -202,7 +202,9 @@ def make_query_fn(cfg: Config) -> QueryFn:
         result = []
         for table in records:
             for record in table.records:
-                result.append((record.get_time(), record.get_value()))
+                # get_time() raises KeyError on aggregates that drop _time
+                # (e.g. group()|>mean()); tolerate it.
+                result.append((record.values.get("_time"), record.get_value()))
         return result
 
     return query
