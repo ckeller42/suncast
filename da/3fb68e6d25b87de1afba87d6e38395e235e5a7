@@ -1,0 +1,25 @@
+README.md
+  s_7057d86e747f91::t_1b2fe2a3c83d04 137-143
+pyproject.toml
+  s_7057d86e747f91::t_f5146db55eed53 15
+suncast/backtest.py
+  s_7057d86e747f91::t_32f69303902aab 4,14,156-239
+tests/test_backtest.py
+  s_7057d86e747f91::t_94df28fcabe6f4 8-9,137-177
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "da3fb68e6d25b87de1afba87d6e38395e235e5a7",
+  "prompts": {},
+  "sessions": {
+    "s_7057d86e747f91": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "s_7057d86e747f91",
+        "model": "unknown"
+      },
+      "human_author": "Christoph Keller <christoph.keller@gmx.net>"
+    }
+  }
+}
