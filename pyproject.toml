@@ -16,6 +16,9 @@ suncast-backtest = "suncast.backtest:main"
 
 [tool.ruff]
 line-length = 100
+# ruff >= 0.16 also formats Python fences inside Markdown; the docs/ plans quote code as
+# written at the time, so keep the formatter out of them.
+extend-exclude = ["*.md"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
 
