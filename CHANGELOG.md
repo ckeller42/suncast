@@ -4,6 +4,40 @@ All notable changes to suncast are documented here. Format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`suncast-backfill` console tool.** For every past day with Victron
+  `pv_power`, fetches Open-Meteo's ERA5 reanalysis (actual past irradiance) at
+  the van's location that day (mean `geo` fix, or `HOME_LAT` / `HOME_LON`
+  before location history), converts it to expected panel watts and writes it
+  to the `solar_forecast` measurement tagged `provider=open-meteo-era5`, so the
+  Grafana forecast-vs-absorbed panel spans the full history. Expected
+  potential only — never used for the forward calibration. One bad day never
+  aborts the run.
+- **`suncast-backtest` console tool.** Offline evaluation of candidate
+  potential-prediction models (M0 flat factor, M1 fixed temperature derate,
+  M2 fitted `k`/`gamma`) against Victron bulk hours using ERA5 irradiance and
+  air temperature. Every model and metric (bulk-hour MAE/bias, clean-day MAE)
+  is scored leave-one-day-out, i.e. out-of-sample. Reads the stored panel
+  config read-only (never creates a row). First verdict (2026-07-05): no
+  temperature signal — keep the flat factor.
+
+### Changed
+
+- **Backtest output is date-stamped and configurable** (#3). Results go to
+  `{BACKTEST_OUT_DIR}/{run_date}-backtest.md` (default directory
+  `docs/superpowers/results`, relative to the working directory) with a header
+  recording the run date and the data-through date, so a later re-run never
+  overwrites an earlier verdict.
+
+### Fixed
+
+- InfluxDB queries whose aggregate drops the `_time` column (e.g.
+  `group() |> mean()`, used for the backfill's per-day location mean) no
+  longer raise `KeyError`.
+
 ## [0.2.0] - 2026-07-05
 
 Provider, calibration-honesty, and location upgrades from the first week of

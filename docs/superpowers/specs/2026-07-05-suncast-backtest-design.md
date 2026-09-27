@@ -98,6 +98,11 @@ at `panel.charger_limit_w`. `base = gti / 1000 * panel.panel_wp`.
 
 Printed table and a written `docs/superpowers/results/2026-07-05-backtest.md`:
 
+> **Note (#3):** the output was later made date-stamped and configurable: it is
+> now written to `{BACKTEST_OUT_DIR}/{run_date}-backtest.md` (default directory
+> `docs/superpowers/results`), so re-runs on later days do not overwrite
+> earlier results. The filename above is the first run's.
+
 ```text
 model               MAE(bulk,W)   bias(W)   MAE(clean-day,Wh)   vs M0
 M0 flat 0.47           …            …             …              —

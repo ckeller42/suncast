@@ -77,6 +77,10 @@ All configuration is via environment variables. Required variables are marked wi
 | `FORECAST_MEASUREMENT` | `solar_forecast` | InfluxDB measurement for the mirrored forecast (Grafana) |
 | `DRIFT_KM_MAX` | `20` | Skip a day's calibration if the van roamed more than this many km |
 
+The offline `suncast-backfill` / `suncast-backtest` scripts read the same
+variables plus `HOME_LAT`, `HOME_LON` and `BACKTEST_OUT_DIR`; see
+[Offline tools](#offline-tools-run-on-the-pi).
+
 ## API
 
 All requests/responses are JSON. POST `/api/forecast` returns both raw and calibrated hourly/daily series.
@@ -135,9 +139,51 @@ Formatter (check only):
 ruff format --check
 ```
 
-### Backtest (offline model evaluation)
+### Offline tools (run on the Pi)
+
+Two console scripts ship alongside the service. Both load the same service
+config (`INFLUX_URL`, `INFLUX_ORG`, `INFLUXDB_TOKEN`, bucket/measurement names,
+`SUNCAST_DB`), so run them with the service env sourced, e.g.:
+
+```bash
+set -a; . /etc/buspi/secrets.env; . /etc/buspi/suncast.env; set +a
+/home/pi/suncast-env/bin/suncast-backfill
+```
+
+Both walk every day from the first `pv_power` sample in the last 120 days up to
+yesterday (UTC). For each day the van's location is the mean of that day's
+`geo` track; days with no location history fall back to `HOME_LAT`/`HOME_LON`.
+One failing day is logged and skipped, never aborting the run.
+
+| Variable | Default | Used by | Description |
+|----------|---------|---------|-------------|
+| `HOME_LAT` | `48.77` | backfill, backtest | Fallback latitude for days with no `geo` fix |
+| `HOME_LON` | `9.16` | backfill, backtest | Fallback longitude for days with no `geo` fix |
+| `BACKTEST_OUT_DIR` | `docs/superpowers/results` | backtest | Directory for the results file (relative paths resolve against the current working directory) |
+
+#### Backfill (historical expected PV)
+
+`suncast-backfill` fetches Open-Meteo's ERA5 reanalysis (the actual past
+irradiance) for each day, converts it to expected panel watts with the stored
+panel config, and writes it to InfluxDB in the `FORECAST_MEASUREMENT`
+measurement (default `solar_forecast`: `raw_w`, `corrected_w`, `factor=1.0`)
+tagged `provider=open-meteo-era5`. This lets the Grafana forecast-vs-absorbed
+panel span the full PV history, not just from deployment forward. It is an
+expected-potential line, not a forecast, and never feeds the live calibration.
+Re-running rewrites the same points. Note it reads the panel through the
+service's store, which creates `SUNCAST_DB` and a default panel row if absent.
+
+#### Backtest (offline model evaluation)
 
 `suncast-backtest` scores candidate potential-prediction models (flat factor vs
-temperature-derate) against Victron history using ERA5 reanalysis, and writes a
-results table to `docs/superpowers/results/`. Run it on the Pi with the service
-env sourced (`HOME_LAT`/`HOME_LON` set the pre-location-history fallback).
+temperature-derate) against Victron history using ERA5 reanalysis, all metrics
+leave-one-day-out. It reads the stored panel config read-only (defaults if none)
+and prints a results table, then writes it to
+`{BACKTEST_OUT_DIR}/{run_date}-backtest.md` (run date in UTC), headed
+`# Backtest results ({run_date}, data through {end_day})`. Because the filename
+carries the run date, a run on a later day never overwrites an earlier verdict;
+a second run on the same day does overwrite that day's file.
+
+The default `BACKTEST_OUT_DIR` is relative to the current working directory, so
+either run from the repo root or set it explicitly on the Pi, e.g.
+`BACKTEST_OUT_DIR=/home/pi/suncast-results suncast-backtest`.
