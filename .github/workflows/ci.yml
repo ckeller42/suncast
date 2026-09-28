@@ -1,31 +1,42 @@
 name: CI
 on:
-  push: {branches: [main]}
+  push:
+    branches: [main]
   pull_request:
-permissions: {contents: read}
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.13"
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+      - run: pip install -e ".[dev]"
+      - run: pre-commit run --all-files --show-diff-on-failure
+      # The gitleaks commit hook only scans staged changes, so scan the whole tree here.
+      - run: pre-commit run --hook-stage manual gitleaks-dir --all-files
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - uses: actions/setup-python@f677139bbe7f9c59b41e40162b753c062f5d49a3 # v5
-        with: {python-version: "3.11"}
-      - run: pip install -e ".[dev]"
-      - run: ruff check . && ruff format --check .
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e ".[dev]" pytest-cov
       - name: Tests + coverage gate (pure modules >= 85%)
         run: |
-          pip install pytest-cov
           pytest -q --cov=suncast.calibrate --cov=suncast.config \
             --cov=suncast.providers.forecast_solar --cov=suncast.models --cov-fail-under=85
-  markdownlint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - run: npx --yes markdownlint-cli@0.42.0 --config .markdownlint.json '**/*.md'
-  gitleaks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - run: |
-          curl -sSL https://github.com/gitleaks/gitleaks/releases/download/v8.21.2/gitleaks_8.21.2_linux_x64.tar.gz | tar -xz gitleaks
-          ./gitleaks detect --source . --no-git --redact -v

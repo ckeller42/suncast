@@ -115,29 +115,25 @@ The factor is applied to all future hourly points of the primary provider. You a
 
 ## Development
 
-Install with dev extras:
+Dependencies are locked in `uv.lock`; run everything through `uv`:
 
 ```bash
-pip install -e ".[dev]"
+uv run --extra dev pytest -q                    # tests
+uv run --extra dev ruff check .                 # lint
+uv run --extra dev ruff format --check .        # formatter (check only)
 ```
 
-Run tests:
+Git hooks (pre-commit) run whitespace/YAML checks, gitleaks, markdownlint and
+ruff on every commit, and the test suite on push. Install them once:
 
 ```bash
-pytest
+uv run --extra dev pre-commit install
+uv run --extra dev pre-commit run --all-files   # same checks CI runs
 ```
 
-Lint:
-
-```bash
-ruff check
-```
-
-Formatter (check only):
-
-```bash
-ruff format --check
-```
+`.pre-commit-config.yaml` pins the tool versions; markdownlint rules live in
+`.markdownlint-cli2.jsonc`. CI runs these hooks plus the tests (coverage gate)
+on Python 3.11, 3.12 and 3.13. Agent/contributor rules: [AGENTS.md](AGENTS.md).
 
 ### Offline tools (run on the Pi)
 
