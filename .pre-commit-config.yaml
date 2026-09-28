@@ -16,11 +16,13 @@ repos:
     hooks:
       # Scans the staged diff: it guards commits, but finds nothing under --all-files.
       - id: gitleaks
+        args: [--config, .gitleaks.toml]
       # Whole-working-tree scan, same pinned version; CI runs it via --hook-stage manual.
       - id: gitleaks
         alias: gitleaks-dir
         name: Detect hardcoded secrets (working tree)
-        entry: gitleaks dir --redact --verbose .
+        entry: gitleaks dir --redact --verbose --config .gitleaks.toml .
+        pass_filenames: false
         stages: [manual]
   - repo: https://github.com/DavidAnson/markdownlint-cli2
     rev: v0.23.3

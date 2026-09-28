@@ -64,4 +64,6 @@ gitleaks scan, and the tests with a coverage gate on Python 3.11–3.13
 ## Never commit
 
 Secrets or tokens (`INFLUXDB_TOKEN`, real `*.env` files), databases (`*.db`),
-or private location/PV data. gitleaks runs on every commit and in CI.
+or private location/PV data. gitleaks runs on every commit and in CI
+(config `.gitleaks.toml`: default rules; `.venv`, caches and the vendored
+Leaflet bundle are excluded because `gitleaks dir` ignores `.gitignore`).

@@ -1,0 +1,16 @@
+# gitleaks config: the default rules, minus paths that are never ours to commit.
+# `gitleaks dir` (the manual-stage `gitleaks-dir` hook) does not honour .gitignore,
+# so local-only trees (.venv with site-packages test fixtures, caches) and the
+# vendored Leaflet bundle are excluded here explicitly.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "local-only or vendored trees"
+paths = [
+  '''^\.venv/''',
+  '''^\.(pytest|ruff)_cache/''',
+  '''\.egg-info/''',
+  '''^(build|dist)/''',
+  '''^suncast/static/vendor/''',
+]
