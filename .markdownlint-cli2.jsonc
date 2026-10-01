@@ -1,0 +1,15 @@
+{
+  // Single markdownlint config (used by the markdownlint-cli2 pre-commit hook and CI).
+  "config": {
+    "default": true,
+    "MD013": false,
+    "MD033": false,
+    "MD041": false,
+    "MD032": false,
+    "MD024": { "siblings_only": true },
+    // MD060 (table-column-style) is new in markdownlint 0.39 and was never enforced here;
+    // the tables use the unpadded `|---|` style throughout.
+    "MD060": false
+  },
+  "ignores": [".venv/**", "**/node_modules/**", "suncast/static/vendor/**"]
+}
