@@ -40,6 +40,8 @@ uv run --extra dev pre-commit run --all-files   # every lint/format/secret hook
 `.pre-commit-config.yaml` is the single source of truth for tool versions
 (pre-commit-hooks, gitleaks, markdownlint-cli2, ruff); the `ruff==` pin in
 `pyproject.toml` must match its ruff rev. The pytest hook runs on `pre-push`.
+The hooks also lint the workflows (`actionlint`, offline `zizmor`); CI's `test` job runs
+`uv sync --locked --extra dev`, so regenerate `uv.lock` (`uv lock`) after editing dependencies.
 Markdown rules live only in `.markdownlint-cli2.jsonc`. CI
 (`.github/workflows/ci.yml`) runs the same pre-commit hooks, a whole-tree
 gitleaks scan, and the tests with a coverage gate on Python 3.11–3.13

@@ -7,12 +7,16 @@ permissions:
   contents: read
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a push to main; only superseded PR runs.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.13"
@@ -20,23 +24,28 @@ jobs:
         with:
           path: ~/.cache/pre-commit
           key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
-      - run: pip install -e ".[dev]"
+      # Only the hook runner is needed (the pytest hook is pre-push); keep in step with uv.lock.
+      - run: pip install "pre-commit==4.6.2"
       - run: pre-commit run --all-files --show-diff-on-failure
       # The gitleaks commit hook only scans staged changes, so scan the whole tree here.
       - run: pre-commit run --hook-stage manual gitleaks-dir --all-files
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7 # v10.2.0
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[dev]" pytest-cov
+          enable-cache: true
+      - run: uv sync --locked --extra dev
       - name: Tests + coverage gate (pure modules >= 85%)
         run: |
-          pytest -q --cov=suncast.calibrate --cov=suncast.config \
+          uv run --no-sync pytest -q --cov=suncast.calibrate --cov=suncast.config \
             --cov=suncast.providers.forecast_solar --cov=suncast.models --cov-fail-under=85
