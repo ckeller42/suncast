@@ -20,7 +20,7 @@ uv sync --locked          # runtime dependencies from uv.lock
 ```bash
 export INFLUX_URL=http://localhost:8086
 export INFLUX_ORG=home
-export INFLUXDB_TOKEN=...          # a token with read access to the Victron and geo buckets
+export INFLUXDB_TOKEN=...          # read access to the Victron and geo buckets, write access to the Victron bucket
 export SUNCAST_DB=./suncast.db     # default is /var/lib/suncast/suncast.db
 ```
 
