@@ -19,6 +19,23 @@ updates:
       default-days: 7
     commit-message:
       prefix: chore
+    # ruff moves only with the ruff-pre-commit rev (see the pre-commit entry below).
+    ignore:
+      - dependency-name: ruff
     groups:
       python-minor-patch:
         update-types: [minor, patch]
+  # Bumps `rev:` in .pre-commit-config.yaml only. When ruff-pre-commit moves, the
+  # `ruff==` pin in pyproject.toml's dev extra (and uv.lock via `uv lock`) must be
+  # moved by hand in the same PR; the uv ecosystem above does not see the rev.
+  - package-ecosystem: pre-commit
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+    commit-message:
+      prefix: chore
+    groups:
+      pre-commit-hooks:
+        patterns: ["*"]
