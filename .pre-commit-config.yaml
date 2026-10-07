@@ -38,9 +38,9 @@ repos:
       - id: zizmor
         # Offline: the online audits need a GitHub token, which the CI job does not have.
         args: [--no-progress, --offline]
-  # Keep in step with the ruff==0.16.9 pin in pyproject.toml's dev extra.
+  # Keep in step with the ruff==0.16.10 pin in pyproject.toml's dev extra.
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.9
+    rev: v0.16.10
     hooks:
       - id: ruff-check
         args: [--fix]
