@@ -26,7 +26,7 @@ for Grafana. See `README.md` for behaviour, API and calibration details.
 | `suncast/templates/`, `static/` | Jinja2 pages, vanilla JS/CSS, vendored Leaflet (`static/vendor/`, not linted) |
 | `tests/` | pytest suite (fixtures are synthetic) |
 | `deploy/` | `suncast.service` (systemd) and `suncast.env.example` |
-| `docs/superpowers/` | design specs, plans and backtest results |
+| `docs/superpowers/` | design specs, plans and backtest results — local-only (gitignored) |
 
 ## Commands
 
