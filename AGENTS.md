@@ -26,6 +26,7 @@ for Grafana. See `README.md` for behaviour, API and calibration details.
 | `suncast/templates/`, `static/` | Jinja2 pages, vanilla JS/CSS, vendored Leaflet (`static/vendor/`, not linted) |
 | `tests/` | pytest suite (fixtures are synthetic) |
 | `deploy/` | `suncast.service` (systemd) and `suncast.env.example` |
+| `docs/` | Sphinx site (`index.rst`, `architecture.md`, how-tos, `reference/`) |
 | `docs/superpowers/` | design specs, plans and backtest results — local-only (gitignored) |
 
 ## Commands
@@ -62,6 +63,22 @@ gitleaks scan, and the tests with a coverage gate on Python 3.11–3.13
 - Commit prefixes: `feat:`, `fix:`, `docs:`, `test:`, `chore:` (optionally
   scoped, e.g. `feat(backtest):`). Work on a
   branch and open a PR into `main`.
+
+## Docs contract
+
+The site under `docs/` (Sphinx, Furo, MyST, Mermaid; extra `docs` in `pyproject.toml`) follows
+the shared concept in buspi-config `DOCUMENTATION.md`:
+
+- Four nav groups in `docs/index.rst`: Getting started, How-to guides, Reference, Explanation.
+  Each page belongs to exactly one. One source per fact, link instead of copying.
+- One architecture page, `docs/architecture.md`, arc42 sections 1 to 12, drawn with C4-styled
+  Mermaid (person #08427b, system #1168bd, container #438dd5, external #999). Mermaid lint:
+  no `;`, no bare `&`, `<` or `>`, no `:` in a loop or opt label. Diagram text must match the code.
+- The config tables live in the README only (between the `config-service` and `config-offline`
+  markers); `docs/reference/configuration.md` includes them and `tests/test_docs_config.py`
+  keeps them equal to `suncast/config.py`.
+- The build must pass as `uv run --extra docs sphinx-build -b html -W docs docs/_build/html`
+  (CI job `docs`, not a required check). `uv lock` after any dependency edit.
 
 ## Never commit
 
