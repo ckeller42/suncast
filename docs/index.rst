@@ -26,6 +26,7 @@ built the way it is. The README is the short entry point; this site is the detai
    reference/configuration
    reference/api
    reference/calibration
+   reference/glossary
 
 .. toctree::
    :caption: Explanation
