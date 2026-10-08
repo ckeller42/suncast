@@ -133,3 +133,44 @@ def test_latest_location_picks_freshest_series():
 
     lat, lon, rng, _age = InfluxReader(CFG, q).latest_location()
     assert (lat, lon, rng) == (48.83, 8.28, 20.0)  # wifi (newer) wins over stale cell
+
+
+def test_write_fn_targets_forecast_bucket_not_victron_bucket(monkeypatch):
+    import sys
+    import types
+
+    written = []
+
+    class FakeWriteApi:
+        def write(self, bucket, record):
+            written.append((bucket, record))
+
+    class FakeClient:
+        def __init__(self, **kwargs):
+            pass
+
+        def write_api(self, write_options=None):
+            return FakeWriteApi()
+
+    client_mod = types.ModuleType("influxdb_client")
+    client_mod.InfluxDBClient = FakeClient
+    write_mod = types.ModuleType("influxdb_client.client.write_api")
+    write_mod.SYNCHRONOUS = object()
+    monkeypatch.setitem(sys.modules, "influxdb_client", client_mod)
+    monkeypatch.setitem(sys.modules, "influxdb_client.client", types.ModuleType("x"))
+    monkeypatch.setitem(sys.modules, "influxdb_client.client.write_api", write_mod)
+
+    from suncast.config import load
+    from suncast.influx import make_write_fn
+
+    cfg = load(
+        {
+            "INFLUX_URL": "http://localhost:8086",
+            "INFLUX_ORG": "home",
+            "INFLUXDB_TOKEN": "t",
+            "VICTRON_BUCKET": "mppt",
+            "FORECAST_BUCKET": "forecasts",
+        }
+    )
+    make_write_fn(cfg)(["solar_forecast,provider=x raw_w=1.0 1"])
+    assert written == [("forecasts", ["solar_forecast,provider=x raw_w=1.0 1"])]

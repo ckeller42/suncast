@@ -40,7 +40,6 @@ All configuration is via environment variables. Required variables are marked wi
 | `GEO_BUCKET` | `buspi` | InfluxDB bucket containing GPS location data |
 | `GEO_MEASUREMENT` | `geo` | Measurement name for location data |
 | `SUNCAST_PORT` | `8090` | Port for the web server |
-| `SUNCAST_TZ` | `Europe/Berlin` | Timezone name (parsed into the config, not used by any code path yet) |
 | `SUNCAST_DB` | `/var/lib/suncast/suncast.db` | Path to SQLite calibration database |
 | `SUNCAST_WINDOW_DAYS` | `30` | Calibration window (days) |
 | `SUNCAST_MIN_SAMPLES` | `5` | Minimum samples required before calibration is applied |
@@ -50,6 +49,7 @@ All configuration is via environment variables. Required variables are marked wi
 | `PROVIDER` | `open_meteo` | Primary provider (`open_meteo` \| `forecast_solar`) |
 | `PROVIDER_SECONDARY` | `forecast_solar` | Secondary provider shown for comparison (empty to disable) |
 | `FORECAST_MEASUREMENT` | `solar_forecast` | InfluxDB measurement for the mirrored forecast (Grafana) |
+| `FORECAST_BUCKET` | `buspi` | InfluxDB bucket the forecast is written to (Grafana); needs write access, separate from `VICTRON_BUCKET` |
 | `DRIFT_KM_MAX` | `20` | Skip a day's calibration if the van roamed more than this many km |
 <!-- config-service:end -->
 

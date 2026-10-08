@@ -31,7 +31,6 @@ def test_service_table_matches_config():
         "GEO_BUCKET": cfg.geo_bucket,
         "GEO_MEASUREMENT": cfg.geo_measurement,
         "SUNCAST_PORT": cfg.port,
-        "SUNCAST_TZ": cfg.tz,
         "SUNCAST_DB": cfg.db_path,
         "SUNCAST_WINDOW_DAYS": cfg.window_days,
         "SUNCAST_MIN_SAMPLES": cfg.min_samples,
@@ -41,6 +40,7 @@ def test_service_table_matches_config():
         "PROVIDER": cfg.provider,
         "PROVIDER_SECONDARY": cfg.provider_secondary,
         "FORECAST_MEASUREMENT": cfg.forecast_measurement,
+        "FORECAST_BUCKET": cfg.forecast_bucket,
         "DRIFT_KM_MAX": cfg.drift_km_max,
     }
     rows = _rows("config-service")

@@ -73,6 +73,10 @@ async def _job_loop(app: FastAPI) -> None:
                     write=getattr(app.state, "write", None),
                     forecast_measurement=app.state.cfg.forecast_measurement,
                     drift_km_max=app.state.cfg.drift_km_max,
+                    window_days=app.state.cfg.window_days,
+                    min_samples=app.state.cfg.min_samples,
+                    clamp_lo=app.state.cfg.clamp_lo,
+                    clamp_hi=app.state.cfg.clamp_hi,
                 )
             )
         except Exception:

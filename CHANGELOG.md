@@ -26,6 +26,11 @@ All notable changes to suncast are documented here. Format follows
 
 ### Changed
 
+- **The forecast is written to its own bucket.** New `FORECAST_BUCKET` (default `buspi`)
+  selects where the daily mirror and `suncast-backfill` write; they no longer write into
+  `VICTRON_BUCKET`. Make sure the token can write to `FORECAST_BUCKET`.
+- **`SUNCAST_TZ` is removed.** It was never used (all days and timestamps are UTC); a leftover
+  value in `suncast.env` is ignored.
 - **Backtest output is date-stamped and configurable** (#3). Results go to
   `{BACKTEST_OUT_DIR}/{run_date}-backtest.md` (default directory
   `docs/superpowers/results`, relative to the working directory) with a header
@@ -34,6 +39,10 @@ All notable changes to suncast are documented here. Format follows
 
 ### Fixed
 
+- **The InfluxDB mirror honours the calibration settings.** The daily mirror used the
+  default window, minimum samples and clamp instead of `SUNCAST_WINDOW_DAYS`,
+  `SUNCAST_MIN_SAMPLES`, `SUNCAST_CLAMP_LO` and `SUNCAST_CLAMP_HI`, so `corrected_w` could differ
+  from the API's corrected curve.
 - InfluxDB queries whose aggregate drops the `_time` column (e.g.
   `group() |> mean()`, used for the backfill's per-day location mean) no
   longer raise `KeyError`.

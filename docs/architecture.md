@@ -259,7 +259,6 @@ files hold the configuration, the token lives only in `secrets.env`. Steps: [](h
 - **Configuration:** a fixed set of environment variables, parsed once into a dataclass,
   documented once in [](reference/configuration.md).
 - **Time:** all timestamps and day boundaries are UTC. Providers are asked for `timezone=UTC`.
-  `SUNCAST_TZ` is read into the configuration but no code path uses it today.
 - **Persistence:** SQLite for snapshots, ratios and the panel, InfluxDB only for reads and for
   the display mirror. SQLite is the source of truth for calibration.
 - **Dependency injection:** providers take a `fetch` function, the Influx reader a `query`
@@ -295,13 +294,6 @@ files hold the configuration, the token lives only in `secrets.env`. Steps: [](h
 
 ## 11. Risks and technical debt
 
-- **Mirror ignores calibration settings.** The forecast mirror in `daily_tick()` calls
-  `calibration()` with its defaults (30 days, 5 samples, clamp 0.3 to 1.3), not with the
-  `SUNCAST_*` values the API uses. With non-default settings, `corrected_w` in InfluxDB can
-  differ from the API's corrected curve.
-- **`SUNCAST_TZ` is unused.** It is parsed but nothing reads it, see section 8.
-- **Mirror target.** The forecast is written to the Victron bucket (`VICTRON_BUCKET`), not to a
-  bucket of its own, so the token needs write access there.
 - **No authentication.** The API trusts the LAN.
 - **Single process and single SQLite file.** Running two instances against one database would
   double the snapshot work.

@@ -175,7 +175,7 @@ def make_write_fn(cfg: Config) -> WriteFn:
 
     client = InfluxDBClient(url=cfg.influx_url, org=cfg.influx_org, token=cfg.influx_token)
     write_api = client.write_api(write_options=SYNCHRONOUS)
-    bucket = cfg.victron_bucket  # shared buspi bucket
+    bucket = cfg.forecast_bucket  # output only; Victron data is read from victron_bucket
 
     def write(lines: list[str]) -> None:
         write_api.write(bucket=bucket, record=lines)

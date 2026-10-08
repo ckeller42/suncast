@@ -14,11 +14,11 @@ class Config:
     geo_bucket: str = "buspi"
     geo_measurement: str = "geo"
     forecast_measurement: str = "solar_forecast"
+    forecast_bucket: str = "buspi"
     drift_km_max: float = 20.0
     provider: str = "open_meteo"
     provider_secondary: str = "forecast_solar"
     port: int = 8090
-    tz: str = "Europe/Berlin"
     db_path: str = "/var/lib/suncast/suncast.db"
     window_days: int = 30
     min_samples: int = 5
@@ -50,11 +50,11 @@ def load(env: Mapping[str, str]) -> Config:
         geo_bucket=env.get("GEO_BUCKET", "buspi"),
         geo_measurement=env.get("GEO_MEASUREMENT", "geo"),
         forecast_measurement=env.get("FORECAST_MEASUREMENT", "solar_forecast"),
+        forecast_bucket=env.get("FORECAST_BUCKET", "buspi"),
         drift_km_max=float(env.get("DRIFT_KM_MAX", "20")),
         provider=env.get("PROVIDER", "open_meteo"),
         provider_secondary=env.get("PROVIDER_SECONDARY", "forecast_solar"),
         port=int(env.get("SUNCAST_PORT", "8090")),
-        tz=env.get("SUNCAST_TZ", "Europe/Berlin"),
         db_path=env.get("SUNCAST_DB", "/var/lib/suncast/suncast.db"),
         window_days=int(env.get("SUNCAST_WINDOW_DAYS", "30")),
         min_samples=int(env.get("SUNCAST_MIN_SAMPLES", "5")),
