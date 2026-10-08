@@ -1,8 +1,6 @@
 # Architecture
 
-Structured by [arc42](https://arc42.org), drawn as C4-styled Mermaid flowcharts and sequence
-diagrams. Every statement refers to the code in `suncast/`, the module is named where it
-matters.
+Every statement refers to the code in `suncast/`; the module is named where it matters.
 
 ## 1. Introduction and goals
 
