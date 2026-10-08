@@ -1,7 +1,7 @@
 from datetime import UTC, datetime
 
 from suncast.jobs import Deps, daily_tick
-from suncast.models import ForecastPoint, ForecastSeries, PanelConfig
+from suncast.models import DailyRatio, ForecastPoint, ForecastSeries, PanelConfig
 from suncast.store import Store
 
 NOW = datetime(2026, 7, 3, 5, 30, tzinfo=UTC)
@@ -119,6 +119,22 @@ def test_snapshot_mirrors_forecast_to_influx_when_write_set(tmp_path):
     assert captured, "expected forecast lines written"
     assert all(line.startswith("solar_forecast,provider=forecast.solar ") for line in captured)
     assert any("raw_w=100.0" in line for line in captured)
+
+
+def test_mirror_uses_configured_calibration(tmp_path):
+    # Three ratios (newest first: 0.9, 0.8, 0.7). Defaults need 5 samples, so the
+    # default mirror would write factor 1.0; the configured min_samples=2 and
+    # clamp_hi=0.85 must reach the mirror just like they reach the API.
+    captured = []
+    d = deps(tmp_path)
+    for day, ratio in (("2026-06-28", 0.7), ("2026-06-29", 0.8), ("2026-06-30", 0.9)):
+        d.store.save_ratio(DailyRatio(day, 100.0, 100.0 * ratio, ratio), 0)
+    d.write = captured.extend
+    d.min_samples = 2
+    d.clamp_hi = 0.85
+    daily_tick(d)
+    assert captured and all("factor=0.8," in line or "factor=0.8 " in line for line in captured)
+    assert any("corrected_w=80.0" in line for line in captured)
 
 
 def test_write_failure_does_not_break_tick(tmp_path):

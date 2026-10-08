@@ -26,3 +26,13 @@ def test_overrides():
 def test_missing_required_exits():
     with pytest.raises(SystemExit):
         load({"INFLUX_URL": "x"})
+
+
+def test_forecast_bucket_defaults_to_buspi_and_is_independent_of_victron():
+    assert load(BASE).forecast_bucket == "buspi"
+    c = load(BASE | {"VICTRON_BUCKET": "mppt", "FORECAST_BUCKET": "forecasts"})
+    assert c.victron_bucket == "mppt" and c.forecast_bucket == "forecasts"
+
+
+def test_tz_setting_is_gone():
+    assert not hasattr(load(BASE), "tz")

@@ -29,6 +29,11 @@ class Deps:
     write: WriteFn | None = None  # optional: mirror forecasts to InfluxDB (display-only)
     forecast_measurement: str = "solar_forecast"
     drift_km_max: float = 20.0
+    # Calibration settings for the mirrored factor; the app passes the SUNCAST_* values.
+    window_days: int = 30
+    min_samples: int = 5
+    clamp_lo: float = 0.3
+    clamp_hi: float = 1.3
 
 
 def daily_tick(d: Deps) -> dict[str, Any]:
@@ -73,7 +78,13 @@ def daily_tick(d: Deps) -> dict[str, Any]:
                 # source of truth for calibration).
                 if d.write is not None:
                     try:
-                        cal = calibration([r.ratio for r in d.store.ratios()])
+                        cal = calibration(
+                            [r.ratio for r in d.store.ratios()],
+                            d.window_days,
+                            d.min_samples,
+                            d.clamp_lo,
+                            d.clamp_hi,
+                        )
                         out = apply_factor(series, cal)
                         d.write(
                             forecast_lines(
